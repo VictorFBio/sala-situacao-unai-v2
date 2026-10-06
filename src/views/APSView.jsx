@@ -1,11 +1,19 @@
-import React from 'react';
-import { ArrowLeft, Activity, Users, Calendar, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Activity, Users, Calendar, Info, Stethoscope, Sparkles, Smile, ShieldCheck } from 'lucide-react';
 import KPICard from '../components/KPICard';
 import LookerEmbed from '../components/LookerEmbed';
-import { ApsAtendimentosChart } from '../components/NativeCharts';
+import { 
+  ApsAtendimentosChart, 
+  ApsVisitasChart, 
+  ApsOdontoChart, 
+  ApsProcedimentosChart, 
+  ApsC1Chart 
+} from '../components/NativeCharts';
 import { formatNumber } from '../utils/data-loader';
 
 export default function APSView({ data, onRouteChange }) {
+  const [activeTab, setActiveTab] = useState('atendimentos');
+
   const resumo = data?.resumo || [];
   const dashboard = data?.dashboard || {};
   const queries = dashboard.queries || {};
@@ -17,6 +25,10 @@ export default function APSView({ data, onRouteChange }) {
   const visitas = getInd('I09');
 
   const serieAtendimentos = queries.aps_individuais?.rows || [];
+  const serieVisitas = queries.aps_visitas?.rows || [];
+  const serieOdonto = queries.aps_odontologia?.rows || [];
+  const serieProcedimentos = queries.aps_procedimentos?.rows || [];
+  const serieC1 = queries.aps_c1?.rows || [];
 
   return (
     <div className="container" style={{ padding: '32px 24px' }}>
@@ -92,16 +104,162 @@ export default function APSView({ data, onRouteChange }) {
         defaultTitle="Painel Interativo de Atenção Primária · Looker Studio"
         nativeContent={
           <div>
-            <div style={{ marginBottom: '24px' }}>
-              <h4 style={{ fontSize: '1.15rem', color: 'var(--color-primary-dark)', marginBottom: '6px' }}>
-                Evolução dos Atendimentos Individuais na APS (Série Temporal)
-              </h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-                Série contínua de registros mensais de consultas médicas e de enfermagem na Atenção Primária.
-              </p>
+            {/* Seletor de Abas do Dashboard Nativo */}
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px', 
+              borderBottom: '2px solid var(--color-border)', 
+              marginBottom: '24px',
+              paddingBottom: '2px',
+              overflowX: 'auto'
+            }}>
+              <button
+                onClick={() => setActiveTab('atendimentos')}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '6px 6px 0 0',
+                  border: 'none',
+                  background: activeTab === 'atendimentos' ? 'var(--color-primary)' : 'transparent',
+                  color: activeTab === 'atendimentos' ? '#FFFFFF' : 'var(--color-text-main)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Stethoscope size={16} />
+                <span>Atendimentos & Visitas ACS</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('odonto_proc')}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '6px 6px 0 0',
+                  border: 'none',
+                  background: activeTab === 'odonto_proc' ? 'var(--color-primary)' : 'transparent',
+                  color: activeTab === 'odonto_proc' ? '#FFFFFF' : 'var(--color-text-main)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <Smile size={16} />
+                <span>Procedimentos & Odontologia</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('mais_acesso')}
+                style={{
+                  padding: '10px 18px',
+                  borderRadius: '6px 6px 0 0',
+                  border: 'none',
+                  background: activeTab === 'mais_acesso' ? 'var(--color-primary)' : 'transparent',
+                  color: activeTab === 'mais_acesso' ? '#FFFFFF' : 'var(--color-text-main)',
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <ShieldCheck size={16} />
+                <span>Programa Mais Acesso (C1)</span>
+              </button>
             </div>
 
-            <ApsAtendimentosChart rows={serieAtendimentos} />
+            {/* Conteúdo da Aba 1: Atendimentos & Visitas */}
+            {activeTab === 'atendimentos' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                <div style={{ background: '#FFFFFF', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <h4 style={{ fontSize: '1.05rem', color: 'var(--color-primary-dark)', marginBottom: '4px' }}>
+                      Evolução dos Atendimentos Individuais na APS (Série Mensal)
+                    </h4>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                      Contagem contínua de consultas médicas e de enfermagem registradas no Siaps.
+                    </p>
+                  </div>
+                  <ApsAtendimentosChart rows={serieAtendimentos} />
+                </div>
+
+                <div style={{ background: '#FFFFFF', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <h4 style={{ fontSize: '1.05rem', color: 'var(--color-primary-dark)', marginBottom: '4px' }}>
+                      Visitas Domiciliares Realizadas por Agentes Comunitários de Saúde (ACS)
+                    </h4>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                      Acompanhamento territorial mensal no domicílio das famílias de Unaí.
+                    </p>
+                  </div>
+                  <ApsVisitasChart rows={serieVisitas} />
+                </div>
+              </div>
+            )}
+
+            {/* Conteúdo da Aba 2: Procedimentos & Odontologia */}
+            {activeTab === 'odonto_proc' && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px' }}>
+                <div style={{ background: '#FFFFFF', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <h4 style={{ fontSize: '1.05rem', color: 'var(--color-primary-dark)', marginBottom: '4px' }}>
+                      Atendimentos Odontológicos na Atenção Primária
+                    </h4>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                      Consultas e procedimentos de saúde bucal na rede básica municipal.
+                    </p>
+                  </div>
+                  <ApsOdontoChart rows={serieOdonto} />
+                </div>
+
+                <div style={{ background: '#FFFFFF', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <h4 style={{ fontSize: '1.05rem', color: 'var(--color-primary-dark)', marginBottom: '4px' }}>
+                      Procedimentos Clínicos / Ambulatoriais na APS
+                    </h4>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                      Curativos, administração de medicamentos, aferição de pressão e glicemia.
+                    </p>
+                  </div>
+                  <ApsProcedimentosChart rows={serieProcedimentos} />
+                </div>
+              </div>
+            )}
+
+            {/* Conteúdo da Aba 3: Programa Mais Acesso (C1) */}
+            {activeTab === 'mais_acesso' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div style={{ background: '#FFFFFF', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                  <div style={{ marginBottom: '14px' }}>
+                    <h4 style={{ fontSize: '1.05rem', color: 'var(--color-primary-dark)', marginBottom: '4px' }}>
+                      Classificação de Desempenho C1 das 21 Equipes eSF (Por Quadrimestre)
+                    </h4>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
+                      Distribuição oficial das equipes entre as categorias Ótimo, Bom, Suficiente e Regular no Siaps/MS.
+                    </p>
+                  </div>
+                  <ApsC1Chart rows={serieC1} />
+                </div>
+
+                <div style={{ background: 'var(--color-bg-subtle)', padding: '16px 20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
+                  <h5 style={{ fontSize: '0.9rem', color: 'var(--color-primary-dark)', marginBottom: '6px' }}>
+                    Resumo do 1º Quadrimestre de 2026 (2026Q1)
+                  </h5>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                    No 1º quadrimestre de 2026, todas as <strong>21 equipes de Saúde da Família (eSF)</strong> mantiveram-se credenciadas e aptas ao custeio federal no programa Mais Acesso, distribuídas em: <strong>2 equipes com padrão Ótimo</strong>, <strong>3 equipes Bom</strong>, <strong>13 equipes Suficiente</strong> e <strong>3 equipes Regular</strong>. O 2º quadrimestre de 2026 permanece em apuração administrativa pelo Ministério da Saúde.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {/* Notas Metodológicas e Limitações */}
             <div style={{ marginTop: '32px', background: 'var(--color-bg-subtle)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--color-border)' }}>
@@ -121,3 +279,4 @@ export default function APSView({ data, onRouteChange }) {
     </div>
   );
 }
+
