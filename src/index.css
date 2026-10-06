@@ -67,64 +67,112 @@ button:disabled { cursor: default; opacity: .5; }
 .intro-gate-overlay {
   position: fixed; inset: 0; z-index: 9999; display: flex; overflow: hidden;
   background: #062F4F;
+  transition: background .3s ease;
+}
+.intro-gate-overlay.phase-opening {
+  background: transparent;
+  pointer-events: none;
 }
 .gate-door {
-  width: 50vw; height: 100vh; display: flex; align-items: center; will-change: transform;
+  width: 50vw; height: 100vh; display: flex; align-items: center;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
 }
-.gate-door-left { justify-content: flex-end; transform: translateX(-100%); background: #07426E; }
-.gate-door-right { justify-content: flex-start; transform: translateX(100%); background: #085289; }
-.gate-door-panel {
+.gate-door-left {
+  justify-content: flex-end;
+  transform: translate3d(-100%, 0, 0);
+  background: #07426E;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+}
+.gate-door-right {
+  justify-content: flex-start;
+  transform: translate3d(100%, 0, 0);
+  background: #085289;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
+}
+.gate-door-left .gate-door-panel {
   width: 100%; height: 100%; display: flex; flex-direction: column;
-  justify-content: center; align-items: center; padding: 40px;
+  justify-content: center; align-items: flex-end; padding-right: 36px;
 }
-.gate-center-seam {
-  position: absolute; top: 0; left: calc(50% - 1px); width: 2px; height: 100vh;
-  z-index: 10005; background: #fff; opacity: 0; transition: opacity .3s ease; pointer-events: none;
+.gate-door-right .gate-door-panel {
+  width: 100%; height: 100%; display: flex; flex-direction: column;
+  justify-content: center; align-items: flex-start; padding-left: 36px;
 }
-.gate-center-seam.active { opacity: .85; }
 
+/* Transições suaves e responsivas */
 .phase-closing .gate-door-left, .phase-closed .gate-door-left,
-.phase-logos_growing .gate-door-left, .phase-pulsing .gate-door-left,
+.phase-logos .gate-door-left, .phase-pulsing .gate-door-left,
 .phase-closing .gate-door-right, .phase-closed .gate-door-right,
-.phase-logos_growing .gate-door-right, .phase-pulsing .gate-door-right {
-  transform: translateX(0); transition: transform 1.15s cubic-bezier(.16, 1, .3, 1);
+.phase-logos .gate-door-right, .phase-pulsing .gate-door-right {
+  transform: translate3d(0, 0, 0);
+  transition: transform .75s cubic-bezier(.16, 1, .3, 1);
 }
-.phase-opening .gate-door-left { transform: translateX(-100%); transition: transform 1.05s cubic-bezier(.65, 0, .35, 1); }
-.phase-opening .gate-door-right { transform: translateX(100%); transition: transform 1.05s cubic-bezier(.65, 0, .35, 1); }
-.phase-opening .gate-center-seam { opacity: 0; }
+.phase-opening .gate-door-left {
+  transform: translate3d(-100%, 0, 0);
+  transition: transform .85s cubic-bezier(.65, 0, .35, 1);
+}
+.phase-opening .gate-door-right {
+  transform: translate3d(100%, 0, 0);
+  transition: transform .85s cubic-bezier(.65, 0, .35, 1);
+}
 
 .gate-logo-container {
   display: flex; flex-direction: column; align-items: center; gap: 14px;
-  opacity: 0; transform: scale(0);
-  transition: transform .75s cubic-bezier(.34, 1.3, .64, 1), opacity .5s ease; z-index: 10002;
+  opacity: 0; transform: scale(0.7);
+  transition: transform .55s cubic-bezier(.16, 1, .3, 1), opacity .4s ease;
+  z-index: 10002;
 }
-.gate-logo-container.visible { opacity: 1; transform: scale(1); }
-.gate-logo-card { background: #fff; padding: 16px 26px; display: flex; align-items: center; justify-content: center; }
-.gate-logo-card img { height: 72px; width: auto; display: block; }
-.gate-logo-caption { font-family: var(--font-heading); font-size: .8125rem; font-weight: 700; letter-spacing: 1.5px; color: #fff; }
-.gate-logo-container.pulsing { animation: pulseLogoPair 1.25s ease-in-out infinite; }
+.gate-logo-container.visible {
+  opacity: 1; transform: scale(1);
+}
+.gate-logo-card {
+  background: #fff; padding: 16px 26px; display: flex; align-items: center; justify-content: center;
+  border-radius: 2px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transform: translateZ(0);
+}
+.gate-logo-card img {
+  height: 72px; width: auto; display: block;
+}
+.gate-logo-caption {
+  font-family: var(--font-heading); font-size: .8125rem; font-weight: 700; letter-spacing: 1.5px; color: #fff;
+}
+.gate-logo-container.pulsing .gate-logo-card {
+  animation: pulseLogoPair 1.15s ease-in-out infinite;
+}
 @keyframes pulseLogoPair {
   0%, 100% { transform: scale(1); }
-  35% { transform: scale(1.14); }
-  65% { transform: scale(1.03); }
-  80% { transform: scale(1.09); }
+  50% { transform: scale(1.10); }
 }
+
 .gate-title-banner {
   position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
   text-align: center; color: #fff; z-index: 10003; pointer-events: none; white-space: nowrap;
-  animation: bannerFadeUp .6s ease forwards;
+  animation: bannerFadeUp .5s ease forwards;
 }
-@keyframes bannerFadeUp { from { opacity: 0; transform: translate(-50%, 16px); } to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes bannerFadeUp {
+  from { opacity: 0; transform: translate3d(-50%, 14px, 0); }
+  to { opacity: 1; transform: translate3d(-50%, 0, 0); }
+}
+.gate-title-banner.fading, .phase-opening .gate-title-banner {
+  opacity: 0; transform: translate3d(-50%, 8px, 0);
+  transition: opacity .3s ease, transform .3s ease;
+}
 .gate-title-banner h2 { font-size: 1.6rem; letter-spacing: .5px; color: #fff; margin-bottom: 4px; }
 .gate-title-banner p { font-size: .95rem; color: rgba(255, 255, 255, .85); font-weight: 500; }
-.phase-opening .gate-title-banner { opacity: 0; transition: opacity .3s ease; animation: none; }
 
 .btn-skip-gate {
   position: absolute; bottom: 28px; right: 28px; z-index: 10006;
   color: #fff; border: 1px solid rgba(255, 255, 255, .55); padding: 9px 18px;
   font-size: .875rem; font-weight: 600; border-radius: var(--radius);
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: background .2s ease, opacity .2s ease;
 }
-.btn-skip-gate:hover { background: rgba(255, 255, 255, .14); }
+.btn-skip-gate:hover { background: rgba(255, 255, 255, .2); }
+.phase-opening .btn-skip-gate { opacity: 0; pointer-events: none; }
 
 /* ============ Cabeçalho ============ */
 .site-header { background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }

@@ -3,46 +3,46 @@ import { ArrowRight } from 'lucide-react';
 
 export default function IntroGateAnimation({ onComplete }) {
   // Fases da coreografia:
-  // 1. 'waiting': fundo azul limpo
-  // 2. 'closing': os dois portões deslizam das laterais para o centro
+  // 1. 'waiting': início com tela azul suave
+  // 2. 'closing': os dois portões deslizam das laterais para o centro (0ms -> 750ms)
   // 3. 'closed': portões se encostam no meio
-  // 4. 'logos_growing': surgem as duas logos (Unaí e SUS) e crescem até o tamanho normal
-  // 5. 'pulsing': com as logos no tamanho normal, elas realizam pulsação sincronizada
-  // 6. 'opening': abre-se o portão deslizando para fora
-  // 7. 'finished': site totalmente visível
-  const [phase, setPhase] = useState('waiting');
+  // 4. 'logos': surgem as duas logos (Unaí e SUS) e o título central (750ms -> 1500ms)
+  // 5. 'pulsing': as logos realizam pulsação harmônica (1500ms -> 2700ms)
+  // 6. 'opening': abrem-se as portas deslizando para as laterais, revelando o site (2700ms -> 3550ms)
+  // 7. 'finished': animação encerrada (3600ms)
+  const [phase, setPhase] = useState('closing');
 
   useEffect(() => {
-    const timerClosing = setTimeout(() => {
-      setPhase('closing');
-    }, 150);
-
+    // 750ms: Portas se encontram no meio
     const timerClosed = setTimeout(() => {
       setPhase('closed');
-    }, 1300);
+    }, 750);
 
-    const timerLogosGrowing = setTimeout(() => {
-      setPhase('logos_growing');
-    }, 1550);
+    // 850ms: Logos e título surgem em tamanho normal
+    const timerLogos = setTimeout(() => {
+      setPhase('logos');
+    }, 850);
 
+    // 1550ms: Logos pulsam sincronizadas
     const timerPulsing = setTimeout(() => {
       setPhase('pulsing');
-    }, 2650);
+    }, 1550);
 
+    // 2750ms: Abrem-se as portas revelando o site
     const timerOpening = setTimeout(() => {
       setPhase('opening');
-    }, 4000);
+    }, 2750);
 
+    // 3600ms: Animação finalizada, libera o site
     const timerFinished = setTimeout(() => {
       setPhase('finished');
       sessionStorage.setItem('unai_gate_intro_seen', 'true');
       if (onComplete) onComplete();
-    }, 5050);
+    }, 3600);
 
     return () => {
-      clearTimeout(timerClosing);
       clearTimeout(timerClosed);
-      clearTimeout(timerLogosGrowing);
+      clearTimeout(timerLogos);
       clearTimeout(timerPulsing);
       clearTimeout(timerOpening);
       clearTimeout(timerFinished);
@@ -57,7 +57,7 @@ export default function IntroGateAnimation({ onComplete }) {
 
   if (phase === 'finished') return null;
 
-  const showLogos = phase === 'logos_growing' || phase === 'pulsing' || phase === 'opening';
+  const showLogos = phase === 'logos' || phase === 'pulsing' || phase === 'opening';
   const isPulsing = phase === 'pulsing';
 
   return (
@@ -67,15 +67,9 @@ export default function IntroGateAnimation({ onComplete }) {
       aria-modal="true" 
       aria-label="Apresentação institucional dos portões de Unaí e SUS"
     >
-      {/* Linha de costura central no momento do encontro */}
-      <div className={`gate-center-seam ${(phase === 'closed' || showLogos) ? 'active' : ''}`} />
-
       {/* Portão Esquerdo (Prefeitura de Unaí) */}
       <div className="gate-door gate-door-left">
         <div className="gate-door-panel">
-          <div className="gate-door-trim" />
-          <div className="gate-door-rivets" />
-
           {/* Logo Prefeitura de Unaí */}
           <div className={`gate-logo-container logo-unai ${showLogos ? 'visible' : ''} ${isPulsing ? 'pulsing' : ''}`}>
             <div className="gate-logo-card">
@@ -94,9 +88,6 @@ export default function IntroGateAnimation({ onComplete }) {
       {/* Portão Direito (SUS) */}
       <div className="gate-door gate-door-right">
         <div className="gate-door-panel">
-          <div className="gate-door-trim" />
-          <div className="gate-door-rivets" />
-
           {/* Logo SUS */}
           <div className={`gate-logo-container logo-sus ${showLogos ? 'visible' : ''} ${isPulsing ? 'pulsing' : ''}`}>
             <div className="gate-logo-card">
@@ -112,9 +103,9 @@ export default function IntroGateAnimation({ onComplete }) {
         </div>
       </div>
 
-      {/* Faixa Título Institucional */}
+      {/* Faixa Título Institucional Central (sem linha sobreposta) */}
       {showLogos && (
-        <div className={`gate-title-banner ${isPulsing ? 'glow' : ''}`}>
+        <div className={`gate-title-banner ${phase === 'opening' ? 'fading' : ''}`}>
           <h2>SALA DE SITUAÇÃO DE SAÚDE</h2>
           <p>Secretaria Municipal de Saúde · Unaí - MG</p>
         </div>
