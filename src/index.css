@@ -67,30 +67,33 @@ button:disabled { cursor: default; opacity: .5; }
 .intro-gate-overlay {
   position: fixed; inset: 0; z-index: 9999; display: flex; overflow: hidden;
   background: #062F4F;
-  transition: background .3s ease;
+  transition: background .35s ease;
 }
 .intro-gate-overlay.phase-opening {
-  background: transparent;
+  background: transparent !important;
   pointer-events: none;
 }
 .gate-door {
+  position: absolute; top: 0; bottom: 0;
   width: 50vw; height: 100vh; display: flex; align-items: center;
   will-change: transform;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  transform: translate3d(0, 0, 0);
+  z-index: 10001;
 }
 .gate-door-left {
+  left: 0;
   justify-content: flex-end;
-  transform: translate3d(-100%, 0, 0);
   background: #07426E;
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 6px 0 28px rgba(0, 0, 0, 0.45);
+  transform: translate3d(-100%, 0, 0);
 }
 .gate-door-right {
+  left: 50vw;
   justify-content: flex-start;
-  transform: translate3d(100%, 0, 0);
   background: #085289;
-  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.35);
+  box-shadow: -6px 0 28px rgba(0, 0, 0, 0.45);
+  transform: translate3d(100%, 0, 0);
 }
 .gate-door-left .gate-door-panel {
   width: 100%; height: 100%; display: flex; flex-direction: column;
@@ -101,31 +104,60 @@ button:disabled { cursor: default; opacity: .5; }
   justify-content: center; align-items: flex-start; padding-left: 36px;
 }
 
-/* Transições suaves e responsivas */
-.phase-closing .gate-door-left, .phase-closed .gate-door-left,
-.phase-logos .gate-door-left, .phase-pulsing .gate-door-left,
-.phase-closing .gate-door-right, .phase-closed .gate-door-right,
-.phase-logos .gate-door-right, .phase-pulsing .gate-door-right {
-  transform: translate3d(0, 0, 0);
-  transition: transform .75s cubic-bezier(.16, 1, .3, 1);
+/* 1. Fase Closing: as portas deslizam de fora até o centro */
+.phase-closing .gate-door-left {
+  animation: gateSlideInLeft 1s cubic-bezier(.16, 1, .3, 1) forwards;
 }
-.phase-opening .gate-door-left {
-  transform: translate3d(-100%, 0, 0);
-  transition: transform .85s cubic-bezier(.65, 0, .35, 1);
+.phase-closing .gate-door-right {
+  animation: gateSlideInRight 1s cubic-bezier(.16, 1, .3, 1) forwards;
 }
-.phase-opening .gate-door-right {
-  transform: translate3d(100%, 0, 0);
-  transition: transform .85s cubic-bezier(.65, 0, .35, 1);
+@keyframes gateSlideInLeft {
+  0% { transform: translate3d(-100%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@keyframes gateSlideInRight {
+  0% { transform: translate3d(100%, 0, 0); }
+  100% { transform: translate3d(0, 0, 0); }
 }
 
+/* 2. Fases Closed, Logos e Pulsing: as portas mantêm-se encostadas no centro */
+.phase-closed .gate-door-left,
+.phase-logos .gate-door-left,
+.phase-pulsing .gate-door-left {
+  transform: translate3d(0, 0, 0);
+}
+.phase-closed .gate-door-right,
+.phase-logos .gate-door-right,
+.phase-pulsing .gate-door-right {
+  transform: translate3d(0, 0, 0);
+}
+
+/* 3. Fase Opening: as portas abrem para as laterais revelando o site */
+.phase-opening .gate-door-left {
+  animation: gateSlideOutLeft .9s cubic-bezier(.7, 0, .3, 1) forwards;
+}
+.phase-opening .gate-door-right {
+  animation: gateSlideOutRight .9s cubic-bezier(.7, 0, .3, 1) forwards;
+}
+@keyframes gateSlideOutLeft {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
+}
+@keyframes gateSlideOutRight {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(100%, 0, 0); }
+}
+
+/* Logos surgem no centro e crescem até tamanho normal */
 .gate-logo-container {
   display: flex; flex-direction: column; align-items: center; gap: 14px;
-  opacity: 0; transform: scale(0.7);
-  transition: transform .55s cubic-bezier(.16, 1, .3, 1), opacity .4s ease;
+  animation: logoEntrance .6s cubic-bezier(.16, 1, .3, 1) forwards;
   z-index: 10002;
 }
-.gate-logo-container.visible {
-  opacity: 1; transform: scale(1);
+@keyframes logoEntrance {
+  0% { opacity: 0; transform: scale(0.35); }
+  75% { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
 }
 .gate-logo-card {
   background: #fff; padding: 16px 26px; display: flex; align-items: center; justify-content: center;
@@ -139,25 +171,28 @@ button:disabled { cursor: default; opacity: .5; }
 .gate-logo-caption {
   font-family: var(--font-heading); font-size: .8125rem; font-weight: 700; letter-spacing: 1.5px; color: #fff;
 }
+
+/* Pulsação harmônica das logos */
 .gate-logo-container.pulsing .gate-logo-card {
   animation: pulseLogoPair 1.15s ease-in-out infinite;
 }
 @keyframes pulseLogoPair {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.10); }
+  50% { transform: scale(1.15); }
 }
 
+/* Faixa de título institucional sem linha cortando */
 .gate-title-banner {
   position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
   text-align: center; color: #fff; z-index: 10003; pointer-events: none; white-space: nowrap;
-  animation: bannerFadeUp .5s ease forwards;
+  animation: bannerEntrance .55s ease forwards;
 }
-@keyframes bannerFadeUp {
-  from { opacity: 0; transform: translate3d(-50%, 14px, 0); }
-  to { opacity: 1; transform: translate3d(-50%, 0, 0); }
+@keyframes bannerEntrance {
+  0% { opacity: 0; transform: translate3d(-50%, 16px, 0); }
+  100% { opacity: 1; transform: translate3d(-50%, 0, 0); }
 }
 .gate-title-banner.fading, .phase-opening .gate-title-banner {
-  opacity: 0; transform: translate3d(-50%, 8px, 0);
+  opacity: 0 !important; transform: translate3d(-50%, 8px, 0);
   transition: opacity .3s ease, transform .3s ease;
 }
 .gate-title-banner h2 { font-size: 1.6rem; letter-spacing: .5px; color: #fff; margin-bottom: 4px; }

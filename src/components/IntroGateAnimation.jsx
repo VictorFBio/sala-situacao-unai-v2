@@ -2,43 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 export default function IntroGateAnimation({ onComplete }) {
-  // Fases da coreografia:
-  // 1. 'waiting': início com tela azul suave
-  // 2. 'closing': os dois portões deslizam das laterais para o centro (0ms -> 750ms)
-  // 3. 'closed': portões se encostam no meio
-  // 4. 'logos': surgem as duas logos (Unaí e SUS) e o título central (750ms -> 1500ms)
-  // 5. 'pulsing': as logos realizam pulsação harmônica (1500ms -> 2700ms)
-  // 6. 'opening': abrem-se as portas deslizando para as laterais, revelando o site (2700ms -> 3550ms)
-  // 7. 'finished': animação encerrada (3600ms)
+  // Coreografia da apresentação:
+  // 1. 'closing' (0ms - 1000ms): Tela azul, portas vêm deslizando das laterais e fecham no meio
+  // 2. 'closed' (1000ms - 1050ms): Portas encostadas no meio
+  // 3. 'logos' (1050ms - 1800ms): Surgem as duas logos (Unaí e SUS) e crescem até o tamanho normal
+  // 4. 'pulsing' (1800ms - 3000ms): As logos no tamanho normal realizam pulsação harmônica
+  // 5. 'opening' (3000ms - 3900ms): Abrem-se as portas deslizando para as laterais, revelando o site
+  // 6. 'finished' (3900ms): Animação concluída
   const [phase, setPhase] = useState('closing');
 
   useEffect(() => {
-    // 750ms: Portas se encontram no meio
+    // 1000ms: As portas se encontram no meio
     const timerClosed = setTimeout(() => {
       setPhase('closed');
-    }, 750);
+    }, 1000);
 
-    // 850ms: Logos e título surgem em tamanho normal
+    // 1050ms: Surgem as duas logos e o título
     const timerLogos = setTimeout(() => {
       setPhase('logos');
-    }, 850);
+    }, 1050);
 
-    // 1550ms: Logos pulsam sincronizadas
+    // 1800ms: Logos iniciam pulsação sincronizada
     const timerPulsing = setTimeout(() => {
       setPhase('pulsing');
-    }, 1550);
+    }, 1800);
 
-    // 2750ms: Abrem-se as portas revelando o site
+    // 3000ms: Abrem-se as portas revelando o site
     const timerOpening = setTimeout(() => {
       setPhase('opening');
-    }, 2750);
+    }, 3000);
 
-    // 3600ms: Animação finalizada, libera o site
+    // 3900ms: Finaliza e remove o overlay
     const timerFinished = setTimeout(() => {
       setPhase('finished');
       sessionStorage.setItem('unai_gate_intro_seen', 'true');
       if (onComplete) onComplete();
-    }, 3600);
+    }, 3900);
 
     return () => {
       clearTimeout(timerClosed);
@@ -70,36 +69,38 @@ export default function IntroGateAnimation({ onComplete }) {
       {/* Portão Esquerdo (Prefeitura de Unaí) */}
       <div className="gate-door gate-door-left">
         <div className="gate-door-panel">
-          {/* Logo Prefeitura de Unaí */}
-          <div className={`gate-logo-container logo-unai ${showLogos ? 'visible' : ''} ${isPulsing ? 'pulsing' : ''}`}>
-            <div className="gate-logo-card">
-              <img 
-                src="./assets/prefeitura-unai-recorte.png" 
-                alt="Prefeitura Municipal de Unaí" 
-              />
+          {showLogos && (
+            <div className={`gate-logo-container logo-unai ${isPulsing ? 'pulsing' : ''}`}>
+              <div className="gate-logo-card">
+                <img 
+                  src="./assets/prefeitura-unai-recorte.png" 
+                  alt="Prefeitura Municipal de Unaí" 
+                />
+              </div>
+              <div className="gate-logo-caption">
+                <span>MUNICÍPIO DE UNAÍ</span>
+              </div>
             </div>
-            <div className="gate-logo-caption">
-              <span>MUNICÍPIO DE UNAÍ</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Portão Direito (SUS) */}
       <div className="gate-door gate-door-right">
         <div className="gate-door-panel">
-          {/* Logo SUS */}
-          <div className={`gate-logo-container logo-sus ${showLogos ? 'visible' : ''} ${isPulsing ? 'pulsing' : ''}`}>
-            <div className="gate-logo-card">
-              <img 
-                src="./assets/sus-recorte.png" 
-                alt="Sistema Único de Saúde (SUS)" 
-              />
+          {showLogos && (
+            <div className={`gate-logo-container logo-sus ${isPulsing ? 'pulsing' : ''}`}>
+              <div className="gate-logo-card">
+                <img 
+                  src="./assets/sus-recorte.png" 
+                  alt="Sistema Único de Saúde (SUS)" 
+                />
+              </div>
+              <div className="gate-logo-caption">
+                <span>SISTEMA ÚNICO DE SAÚDE</span>
+              </div>
             </div>
-            <div className="gate-logo-caption">
-              <span>SISTEMA ÚNICO DE SAÚDE</span>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -111,7 +112,7 @@ export default function IntroGateAnimation({ onComplete }) {
         </div>
       )}
 
-      {/* Botão para pular a qualquer instante */}
+      {/* Botão para pular apresentação */}
       <button 
         type="button"
         className="btn-skip-gate" 
