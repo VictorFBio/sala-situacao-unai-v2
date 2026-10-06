@@ -1,0 +1,36 @@
+{
+  "acquisitionDate": "2026-08-21",
+  "resolutionMeters": 10,
+  "overviewResolutionMeters": 40,
+  "crs": "EPSG:31983",
+  "sourceUrl": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_23KKB_20260821_0_L2A",
+  "attribution": "Copernicus Sentinel-2 L2A; processamento ESA; distribuição Earth Search / AWS Open Data",
+  "license": "Copernicus Sentinel Data Terms and Conditions; acesso gratuito",
+  "bounds": {
+    "contexto": [199980, 8110000, 409820, 8255000],
+    "mosaicoOriginal": [199980, 8090200, 409820, 8300020],
+    "urbano": [295209.29, 8186775.08, 299548.25, 8197987.19]
+  },
+  "tiles": [
+    {
+      "id": "S2B_23KKB_20260821_0_L2A",
+      "url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_23KKB_20260821_0_L2A",
+      "sha256": "fb74b60945a15625e7df07ec2b66a250943e8602b9a41d2d0521b007cb928b6a"
+    },
+    {
+      "id": "S2B_23KLB_20260821_0_L2A",
+      "url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_23KLB_20260821_0_L2A",
+      "sha256": "0a2f66003f4a2103c0178bfeef9bcea41e096426724a205b0defad59c0a0f1d6"
+    },
+    {
+      "id": "S2B_23LKC_20260821_0_L2A",
+      "url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_23LKC_20260821_0_L2A",
+      "sha256": "fc0c90444599528df53b568b35b6c253733b178b2f18c5e115028a44891a1d35"
+    },
+    {
+      "id": "S2B_23LLC_20260821_0_L2A",
+      "url": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_23LLC_20260821_0_L2A",
+      "sha256": "a21eba1935f2a6061616960ec0597f9618684d05b4dcd79ce648d8d9cf9728fe"
+    }
+  ]
+}

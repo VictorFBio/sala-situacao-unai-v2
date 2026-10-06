@@ -18,7 +18,7 @@ export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
     { id: '#/vigilancia', label: 'Vigilância em Saúde', icon: ShieldAlert },
     { id: '#/gestao', label: 'Gestão & População', icon: Users },
     { id: '#/mapa', label: 'Busca Saúde (Mapa)', icon: MapPin },
-    { id: '#/fontes', label: 'Fontes & Metadados', icon: FileText },
+    { id: '#/fontes', label: 'Fontes', icon: FileText },
   ];
 
   return (
@@ -26,43 +26,43 @@ export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
       {/* Faixa Superior Institucional */}
       <div className="container">
         <div className="header-top">
-          {/* Marcas Oficiais */}
+          {/* Marcas Oficiais Perfeitamente Alinhadas a 44px */}
           <div className="header-brand">
-            <a href="#/" onClick={(e) => { e.preventDefault(); onRouteChange('#/'); }}>
+            <div className="header-logos">
+              <a href="#/" onClick={(e) => { e.preventDefault(); onRouteChange('#/'); }} title="Ir para a página inicial">
+                <img 
+                  src="./assets/prefeitura-unai-recorte.png" 
+                  alt="Prefeitura Municipal de Unaí" 
+                  className="header-logo"
+                  height="44"
+                />
+              </a>
+              
+              <div className="header-brand-divider" aria-hidden="true"></div>
+              
               <img 
-                src="./assets/prefeitura-unai.png" 
-                alt="Prefeitura Municipal de Unaí" 
-                className="header-logo-pmu"
+                src="./assets/sus-recorte.png" 
+                alt="SUS - Sistema Único de Saúde" 
+                className="header-logo"
+                height="44"
               />
-            </a>
-            
-            <div className="header-brand-divider" aria-hidden="true"></div>
-            
-            <img 
-              src="./assets/sus-positivo.png" 
-              alt="SUS - Sistema Único de Saúde" 
-              className="header-logo-sus"
-            />
+            </div>
             
             <div className="header-brand-title">
-              <h1>Sala de Situação de Saúde</h1>
+              <strong>Sala de Situação de Saúde</strong>
               <span>Secretaria Municipal de Saúde · Unaí - MG</span>
             </div>
           </div>
 
-          {/* Ações e Status */}
+          {/* Ações Institucionais */}
           <div className="header-actions">
-            <span className="badge-version" title="Versão 2 Experimental">
-              <span className="badge-status-dot"></span>
-              V2 · Experimento
-            </span>
-
             <button 
-              className="btn-header-rever"
+              type="button"
+              className="btn-ghost"
               onClick={onReplayIntro}
-              title="Rever a animação dos portões de abertura"
+              title="Rever animação institucional de abertura"
             >
-              <Play size={13} />
+              <Play size={13} aria-hidden="true" />
               <span>Rever Abertura</span>
             </button>
           </div>
@@ -78,32 +78,18 @@ export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
                 key={item.id}
                 href={item.id}
                 className={`nav-link ${isActive ? 'active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
                 onClick={(e) => {
                   e.preventDefault();
                   onRouteChange(item.id);
                 }}
               >
-                <Icon size={16} />
+                <Icon size={16} aria-hidden="true" />
                 <span>{item.label}</span>
               </a>
             );
           })}
         </nav>
-      </div>
-
-      {/* Faixa de Transparência / Prévia Técnica Local */}
-      <div className="banner-previa-local">
-        <div className="container">
-          <div className="banner-previa-inner">
-            <div className="banner-previa-text">
-              <strong>Aviso de Transparência:</strong>
-              <span>Prévia técnica local da V2 com dados públicos agregados oficiais. Não substitui os sistemas e boletins epidemiológicos oficiais.</span>
-            </div>
-            <div>
-              <span>Referência: <strong>05/10/2026</strong></span>
-            </div>
-          </div>
-        </div>
       </div>
     </header>
   );

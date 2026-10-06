@@ -14,10 +14,10 @@ import { loadPortalData } from './utils/data-loader';
 export default function App() {
   // Controle da animação de abertura (verifica se já foi vista na sessão)
   const [showIntro, setShowIntro] = useState(() => {
-    return !sessionStorage.getItem('unai_v2_gate_intro_seen');
+    return !sessionStorage.getItem('unai_gate_intro_seen');
   });
 
-  // Roteamento SPA por Hash (compatível com GitHub Pages e navegação local)
+  // Roteamento SPA por Hash (compatível com GitHub Pages e servidor estático local)
   const [currentRoute, setCurrentRoute] = useState(() => {
     return window.location.hash || '#/';
   });
@@ -61,9 +61,9 @@ export default function App() {
     if (loading) {
       return (
         <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
-          <div className="badge-status-dot" style={{ width: '16px', height: '16px', margin: '0 auto 16px' }}></div>
-          <h3 style={{ color: 'var(--color-primary-dark)', marginBottom: '8px' }}>Carregando dados da Sala de Situação...</h3>
-          <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>Validando séries agregadas e cartografia municipal de Unaí.</p>
+          <div className="spinner" aria-hidden="true"></div>
+          <h3 style={{ color: 'var(--blue-dark)', marginBottom: '8px' }}>Carregando dados da Sala de Situação...</h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Validando séries agregadas e cartografia municipal de Unaí.</p>
         </div>
       );
     }
@@ -89,6 +89,9 @@ export default function App() {
 
   return (
     <div className="app-root">
+      {/* Link de pular direto para o conteúdo acessível */}
+      <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
+
       {/* Animação dos Dois Portões (Unaí & SUS) */}
       {showIntro && (
         <IntroGateAnimation onComplete={() => setShowIntro(false)} />
@@ -102,7 +105,7 @@ export default function App() {
       />
 
       {/* Área Principal de Conteúdo */}
-      <main id="main-content">
+      <main id="main-content" tabIndex={-1}>
         {renderCurrentView()}
       </main>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Shield, FileText, ExternalLink, Heart } from 'lucide-react';
+import { Play } from 'lucide-react';
 
 export default function Footer({ onRouteChange, onReplayIntro }) {
   return (
@@ -8,7 +8,7 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
         <div className="footer-grid">
           {/* Identificação Institucional */}
           <div className="footer-brand">
-            <h3>Sala de Situação de Saúde de Unaí - V2</h3>
+            <h3>Sala de Situação de Saúde de Unaí</h3>
             <p>
               Iniciativa técnica desenvolvida no âmbito da Residência Multiprofissional em Saúde da Família 
               em cooperação com a Secretaria Municipal de Saúde de Unaí - MG.
@@ -34,7 +34,7 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
           <div className="footer-links">
             <h4>Transparência</h4>
             <ul>
-              <li><a href="#/fontes" onClick={(e) => { e.preventDefault(); onRouteChange('#/fontes'); }}>Catálogo de Fontes</a></li>
+              <li><a href="#/fontes" onClick={(e) => { e.preventDefault(); onRouteChange('#/fontes'); }}>Fontes</a></li>
               <li><a href="https://www.prefeituraunai.mg.gov.br/" target="_blank" rel="noopener noreferrer">Portal da Prefeitura</a></li>
               <li><a href="https://datasus.saude.gov.br/" target="_blank" rel="noopener noreferrer">DataSUS Ministério da Saúde</a></li>
               <li style={{ marginTop: '8px' }}>
@@ -43,8 +43,8 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
                   onClick={onReplayIntro}
                   style={{ background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.2)' }}
                 >
-                  <Play size={12} />
-                  <span>Rever Animação dos Portões</span>
+                  <Play size={12} aria-hidden="true" />
+                  <span>Rever Abertura</span>
                 </button>
               </li>
             </ul>
@@ -57,7 +57,7 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
             <span>© {new Date().getFullYear()} Sala de Situação de Saúde · Unaí (MG). Todos os dados agregados são de domínio público.</span>
           </div>
           <div>
-            <span>Ambiente: <strong>V2 (Experimento Local Independente)</strong> · Versão de Produção V1 inalterada</span>
+            <span>Secretaria Municipal de Saúde · Prefeitura Municipal de Unaí - MG</span>
           </div>
         </div>
       </div>
