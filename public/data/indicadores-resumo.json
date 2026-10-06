@@ -1,0 +1,314 @@
+{
+  "tipo": "previa_tecnica_local",
+  "municipio": "Unaí (MG)",
+  "codigo_ibge": "3170404",
+  "coletado_em": "2026-09-29T16:33:44-03:00",
+  "indicadores": [
+    {
+      "id": "I01",
+      "nome": "População residente no Censo 2022",
+      "valor": 86619,
+      "unidade": "pessoas",
+      "periodo": "2022",
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "fonte": "IBGE, Censo Demográfico 2022, agregado 4714, variável 93",
+      "url_fonte": "https://servicodados.ibge.gov.br/api/v3/agregados/4714/periodos/2022/variaveis/93?localidades=N6%5B3170404%5D",
+      "raw_sha256": "60631f1e484970fbb65e68885fcf948c9c2a5aebd11374584d40e844ed7e10d3",
+      "limitacao": "Retrato censitário de 2022; não representa a população de 2026.",
+      "dominio": "Demografia",
+      "tipo_medida": "contagem",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I02",
+      "nome": "População de 0 a 14 anos no Censo 2022",
+      "valor": 19.4,
+      "unidade": "% da população residente",
+      "numerador": 16803,
+      "denominador": 86619,
+      "periodo": "2022",
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "fonte": "IBGE, Censo Demográfico 2022, agregado 9514, variável 93",
+      "url_fonte": "https://servicodados.ibge.gov.br/api/v3/agregados/9514/periodos/2022/variaveis/93?localidades=N6%5B3170404%5D&classificacao=2%5B6794%5D%7C287%5B100362%2C93070%2C93084%2C93085%2C93095%2C93096%2C93097%2C93098%2C49108%2C49109%2C60040%2C60041%2C6653%5D%7C286%5B113635%5D",
+      "raw_sha256": "353defdcfcc52b30678e3d78b47ab673c3ab0c0fc0d1dc2f2ca202dd450df0c1",
+      "limitacao": "Retrato censitário de 2022; não representa a população de 2026. Percentual calculado a partir de faixas etárias não sobrepostas.",
+      "dominio": "Demografia",
+      "tipo_medida": "proporção",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I03",
+      "nome": "População de 60 anos ou mais no Censo 2022",
+      "valor": 14.6,
+      "unidade": "% da população residente",
+      "numerador": 12619,
+      "denominador": 86619,
+      "periodo": "2022",
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "fonte": "IBGE, Censo Demográfico 2022, agregado 9514, variável 93",
+      "url_fonte": "https://servicodados.ibge.gov.br/api/v3/agregados/9514/periodos/2022/variaveis/93?localidades=N6%5B3170404%5D&classificacao=2%5B6794%5D%7C287%5B100362%2C93070%2C93084%2C93085%2C93095%2C93096%2C93097%2C93098%2C49108%2C49109%2C60040%2C60041%2C6653%5D%7C286%5B113635%5D",
+      "raw_sha256": "353defdcfcc52b30678e3d78b47ab673c3ab0c0fc0d1dc2f2ca202dd450df0c1",
+      "limitacao": "Retrato censitário de 2022; não representa a população de 2026. Percentual calculado a partir de faixas etárias não sobrepostas.",
+      "dominio": "Demografia",
+      "tipo_medida": "proporção",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I04",
+      "nome": "Estabelecimentos com cadastro ativo no CNES",
+      "valor": 288,
+      "unidade": "estabelecimentos cadastrados",
+      "periodo": "Consulta em 29/09/2026",
+      "coletado_em": "2026-09-29T15:26:05-03:00",
+      "fonte": "Ministério da Saúde, API de Dados Abertos, CNES",
+      "url_fonte": "https://apidadosabertos.saude.gov.br/cnes/estabelecimentos",
+      "raw_sha256": "921f41b9e3ecc12c82a39059c8e6fd70cdcc7f7779dfcb301639c060b00899d0",
+      "limitacao": "Cadastro ativo inclui unidades públicas e privadas; não comprova funcionamento, atendimento SUS nem capacidade assistencial. A consulta não fornece competência única.",
+      "dominio": "Rede Assistencial",
+      "tipo_medida": "contagem cadastral",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I05",
+      "nome": "Estabelecimentos cadastrados no tipo CNES 02",
+      "valor": 20,
+      "unidade": "unidades cadastradas",
+      "periodo": "Consulta em 29/09/2026",
+      "coletado_em": "2026-09-29T15:26:05-03:00",
+      "fonte": "Ministério da Saúde, API de Dados Abertos, CNES, tipo 02",
+      "url_fonte": "https://apidadosabertos.saude.gov.br/cnes/estabelecimentos",
+      "raw_sha256": "921f41b9e3ecc12c82a39059c8e6fd70cdcc7f7779dfcb301639c060b00899d0",
+      "limitacao": "Cadastro ativo inclui unidades públicas e privadas; não comprova funcionamento, atendimento SUS nem capacidade assistencial. A consulta não fornece competência única. O tipo 02 não equivale automaticamente à rede de UBS municipais de acesso geral; inclui perfis institucionais distintos. Lista, acesso e localização dependem de conferência da APS local.",
+      "dominio": "Rede Assistencial",
+      "tipo_medida": "contagem cadastral",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I06",
+      "nome": "Equipes eSF válidas para custeio no Siaps",
+      "valor": 21,
+      "unidade": "equipes eSF",
+      "periodo": "1º quadrimestre de 2026",
+      "fonte": "Ministério da Saúde, Siaps, avaliação pública",
+      "url_fonte": "https://siaps.saude.gov.br/publico",
+      "limitacao": "Equipes válidas para custeio não equivalem a todos os estabelecimentos CNES nem a todas as equipes cadastradas.",
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "raw_sha256": "ebef375201e6f12405d89205272dd5a143914bc72c896c138bd6458cb00f2a28",
+      "dominio": "Atenção Primária",
+      "tipo_medida": "contagem de equipes",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I07",
+      "nome": "Classificação C1 — Mais Acesso à APS",
+      "valor": 21,
+      "unidade": "equipes eSF classificadas",
+      "periodo": "1º quadrimestre de 2026",
+      "fonte": "Ministério da Saúde, Siaps, avaliação pública",
+      "url_fonte": "https://siaps.saude.gov.br/publico",
+      "limitacao": "Distribuição oficial por classe; não é cobertura populacional e a fórmula não é recalculada localmente.",
+      "categorias": [
+        {
+          "nome": "Regular",
+          "valor": 3
+        },
+        {
+          "nome": "Suficiente",
+          "valor": 13
+        },
+        {
+          "nome": "Bom",
+          "valor": 3
+        },
+        {
+          "nome": "Ótimo",
+          "valor": 2
+        }
+      ],
+      "historico": [
+        {
+          "periodo": "2º quadrimestre de 2025",
+          "valor": 21,
+          "categorias": {
+            "Regular": 8,
+            "Suficiente": 6,
+            "Bom": 5,
+            "Ótimo": 2
+          }
+        },
+        {
+          "periodo": "3º quadrimestre de 2025",
+          "valor": 21,
+          "categorias": {
+            "Regular": 5,
+            "Suficiente": 6,
+            "Bom": 9,
+            "Ótimo": 1
+          }
+        },
+        {
+          "periodo": "1º quadrimestre de 2026",
+          "valor": 21,
+          "categorias": {
+            "Regular": 3,
+            "Suficiente": 13,
+            "Bom": 3,
+            "Ótimo": 2
+          }
+        }
+      ],
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "raw_sha256": "ebef375201e6f12405d89205272dd5a143914bc72c896c138bd6458cb00f2a28",
+      "dominio": "Atenção Primária",
+      "tipo_medida": "distribuição de equipes",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "disponivel",
+        "periodos": 3
+      },
+      "comparacao": {
+        "status": "disponivel",
+        "base": "série histórica oficial"
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I08",
+      "nome": "Atendimentos individuais registrados na APS",
+      "valor": 16366,
+      "unidade": "registros",
+      "periodo": "07/2026",
+      "fonte": "Ministério da Saúde, Siaps, Vigilância de Práticas Assistenciais",
+      "url_fonte": "https://siaps.saude.gov.br/publico/praticas-assistenciais/atendimentos-individuais",
+      "limitacao": "Registros de eventos, não pessoas distintas nem cobertura da população.",
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "raw_sha256": "ebef375201e6f12405d89205272dd5a143914bc72c896c138bd6458cb00f2a28",
+      "dominio": "Atenção Primária",
+      "tipo_medida": "contagem de eventos",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    },
+    {
+      "id": "I09",
+      "nome": "Visitas domiciliares registradas na APS",
+      "valor": 36431,
+      "unidade": "registros",
+      "periodo": "07/2026",
+      "fonte": "Ministério da Saúde, Siaps, Vigilância de Práticas Assistenciais",
+      "url_fonte": "https://siaps.saude.gov.br/publico/praticas-assistenciais/visitas-domiciliares",
+      "limitacao": "Registros do módulo de visitas; não inclui automaticamente todo atendimento domiciliar de profissional de nível superior.",
+      "coletado_em": "2026-09-29T16:33:44-03:00",
+      "raw_sha256": "ebef375201e6f12405d89205272dd5a143914bc72c896c138bd6458cb00f2a28",
+      "dominio": "Atenção Primária",
+      "tipo_medida": "contagem de eventos",
+      "status_dado": "disponivel",
+      "tendencia": {
+        "status": "indisponivel",
+        "motivo": "Série histórica ainda não carregada."
+      },
+      "comparacao": {
+        "status": "indisponivel",
+        "motivo": "Não há período comparável no pacote."
+      },
+      "qualidade": {
+        "recorte_validado": true,
+        "agregado": true,
+        "fonte_registrada": true
+      }
+    }
+  ]
+}

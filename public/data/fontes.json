@@ -1,0 +1,184 @@
+{
+  "tipo": "catalogo_fontes_sala_situacao",
+  "municipio": "Unaí (MG)",
+  "codigo_ibge": "3170404",
+  "observacao": "Catálogo operacional para orientar novas cargas. A presença de uma fonte não significa que o indicador já esteja publicado.",
+  "fontes": [
+    {
+      "id": "ibge-censo",
+      "dominio": "Demografia",
+      "fonte": "IBGE — Censo Demográfico e agregados SIDRA",
+      "sistema": "IBGE",
+      "url": "https://sidra.ibge.gov.br/",
+      "status": "carregada",
+      "recortes_previstos": [
+        "população residente",
+        "faixas etárias",
+        "sexo",
+        "raça/cor",
+        "domicílios"
+      ]
+    },
+    {
+      "id": "cnes",
+      "dominio": "Rede Assistencial",
+      "fonte": "CNES — Cadastro Nacional de Estabelecimentos de Saúde",
+      "sistema": "CNES",
+      "url": "https://cnes.datasus.gov.br/",
+      "status": "carregada",
+      "recortes_previstos": [
+        "estabelecimentos",
+        "tipo de unidade",
+        "natureza jurídica",
+        "equipes e serviços"
+      ]
+    },
+    {
+      "id": "siaps",
+      "dominio": "Atenção Primária",
+      "fonte": "Siaps — Sistema de Informação para a Atenção Primária à Saúde",
+      "sistema": "Siaps",
+      "url": "https://sisaps.saude.gov.br/sistemas/siaps/",
+      "status": "carregada",
+      "recortes_previstos": [
+        "equipes eSF",
+        "classificação C1",
+        "atendimentos",
+        "visitas domiciliares",
+        "atividades coletivas"
+      ]
+    },
+    {
+      "id": "sinan",
+      "dominio": "Epidemiologia",
+      "fonte": "SINAN — Sistema de Informação de Agravos de Notificação",
+      "sistema": "SINAN",
+      "url": "https://datasus.saude.gov.br/transferencia-de-arquivos/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "doenças e agravos de notificação",
+        "série temporal",
+        "faixa etária",
+        "sexo",
+        "território"
+      ]
+    },
+    {
+      "id": "svs-paineis",
+      "dominio": "Epidemiologia",
+      "fonte": "Painéis de Monitoramento SVS",
+      "sistema": "SVS",
+      "url": "https://datasus.saude.gov.br/paineis-de-monitoramento-svs",
+      "status": "planejada",
+      "recortes_previstos": [
+        "arboviroses",
+        "síndromes respiratórias",
+        "tuberculose",
+        "hanseníase",
+        "sífilis"
+      ]
+    },
+    {
+      "id": "pni",
+      "dominio": "Imunização",
+      "fonte": "PNI — Programa Nacional de Imunizações",
+      "sistema": "PNI",
+      "url": "https://www.gov.br/saude/pt-br/composicao/svsa/pni",
+      "status": "planejada",
+      "recortes_previstos": [
+        "cobertura por vacina",
+        "dose",
+        "público-alvo",
+        "homogeneidade",
+        "oportunidade"
+      ]
+    },
+    {
+      "id": "sinasc",
+      "dominio": "Materno-infantil",
+      "fonte": "SINASC — Sistema de Informação sobre Nascidos Vivos",
+      "sistema": "SINASC",
+      "url": "https://datasus.saude.gov.br/transferencia-de-arquivos/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "nascimentos",
+        "pré-natal",
+        "idade materna",
+        "prematuridade",
+        "baixo peso"
+      ]
+    },
+    {
+      "id": "sim",
+      "dominio": "Mortalidade",
+      "fonte": "SIM — Sistema de Informação sobre Mortalidade",
+      "sistema": "SIM",
+      "url": "https://datasus.saude.gov.br/transferencia-de-arquivos/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "óbitos",
+        "causas básicas",
+        "mortalidade infantil",
+        "mortalidade materna",
+        "causas externas"
+      ]
+    },
+    {
+      "id": "sisab",
+      "dominio": "Atenção Primária",
+      "fonte": "SISAB — Sistema de Informação em Saúde para a Atenção Básica",
+      "sistema": "SISAB",
+      "url": "https://sisab.saude.gov.br/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "indicadores de desempenho",
+        "pré-natal",
+        "saúde da criança",
+        "hipertensão",
+        "diabetes"
+      ]
+    },
+    {
+      "id": "sia-sus",
+      "dominio": "Produção de Serviços",
+      "fonte": "SIA/SUS — Sistema de Informações Ambulatoriais",
+      "sistema": "SIA/SUS",
+      "url": "https://datasus.saude.gov.br/informacoes-de-saude-tabnet/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "procedimentos",
+        "atendimentos ambulatoriais",
+        "produção por estabelecimento",
+        "competência"
+      ]
+    },
+    {
+      "id": "sih-sus",
+      "dominio": "Produção de Serviços",
+      "fonte": "SIH/SUS — Sistema de Informações Hospitalares",
+      "sistema": "SIH/SUS",
+      "url": "https://datasus.saude.gov.br/informacoes-de-saude-tabnet/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "internações",
+        "procedimentos hospitalares",
+        "tempo de permanência",
+        "óbitos hospitalares"
+      ]
+    },
+    {
+      "id": "sisvan",
+      "dominio": "Crônicos e nutrição",
+      "fonte": "SISVAN — Sistema de Vigilância Alimentar e Nutricional",
+      "sistema": "SISVAN",
+      "url": "https://sisaps.saude.gov.br/sisvan/",
+      "status": "planejada",
+      "recortes_previstos": [
+        "estado nutricional",
+        "acompanhamento",
+        "ciclos de vida",
+        "marcadores de consumo"
+      ]
+    }
+  ]
+}
