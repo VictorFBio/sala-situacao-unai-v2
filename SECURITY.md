@@ -19,4 +19,4 @@ Não inclua nomes de pacientes, CPF, CNS, prontuários, endereços residenciais,
 
 ## Atualizações
 
-A publicação exige testes e compilação bem-sucedidos. Dependabot acompanha dependências e ações, sem mesclar atualizações automaticamente. Revise as mudanças e as verificações antes de integrar cada atualização.
+A publicação exige testes e compilação bem-sucedidos. Pull requests também executam testes, compilação e auditoria de dependências. Dependabot acompanha dependências e ações, sem mesclar atualizações automaticamente. Revise as mudanças e as verificações antes de integrar cada atualização.
