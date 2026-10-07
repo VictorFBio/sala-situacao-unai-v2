@@ -33,3 +33,4 @@ dados/backups/
 temp/
 tmp/
 *.env*
+.agents/

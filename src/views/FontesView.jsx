@@ -1,10 +1,4 @@
-import React from 'react';
-import { 
-  FileText, 
-  ExternalLink, 
-  CheckCircle2, 
-  Clock 
-} from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import { PageHeader, Note } from '../components/ui';
 
 export default function FontesView({ data, onRouteChange }) {
@@ -27,10 +21,6 @@ export default function FontesView({ data, onRouteChange }) {
           <article key={f.id} className="fonte-card">
             <div className="fonte-top">
               <span className="dom">{f.dominio}</span>
-              <span className={`st ${f.status === 'carregada' ? 'ok' : 'pend'}`}>
-                {f.status === 'carregada' ? <CheckCircle2 size={13} aria-hidden="true" /> : <Clock size={13} aria-hidden="true" />}
-                {f.status === 'carregada' ? 'Carga Validada' : 'Planejada'}
-              </span>
             </div>
 
             <h4>{f.fonte}</h4>

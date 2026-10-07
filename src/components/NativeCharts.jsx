@@ -250,67 +250,122 @@ export function SinascPrenatalChart({ rows = [] }) {
 }
 
 /**
- * 4. Mortalidade por Causas Básicas (SIM)
+ * 4. Mortalidade por Grandes Capítulos da CID-10 (SIM) - Barras Horizontais Ordenadas
  */
-export function CausasMorteChart({ rows = [] }) {
-  const causasTop = [...rows]
-    .sort((a, b) => (b.valor || 0) - (a.valor || 0))
-    .slice(0, 6);
+export function CausasMorteChart({ rows = [], limit = 10 }) {
+  // Agregar óbitos por categoria da CID-10
+  const mapa = new Map();
+  rows.forEach(r => {
+    const nome = (r.categoria || r.causa || 'Outras').replace(/\s+/g, ' ').trim();
+    if (r.valor !== null && r.valor !== undefined) {
+      mapa.set(nome, (mapa.get(nome) || 0) + Number(r.valor));
+    }
+  });
 
-  const labels = causasTop.map(r => r.categoria || r.causa || 'Outras');
-  const valores = causasTop.map(r => r.valor || 0);
-  const total = valores.reduce((a, b) => a + b, 0);
+  // Ordenar decrescente pelo volume de óbitos
+  const ordenadas = [...mapa.entries()]
+    .map(([categoria, valor]) => ({ categoria, valor }))
+    .filter(item => item.valor > 0)
+    .sort((a, b) => b.valor - a.valor);
+
+  const causasTop = limit ? ordenadas.slice(0, limit) : ordenadas;
+  const labels = causasTop.map(r => r.categoria);
+  const valores = causasTop.map(r => r.valor);
+  const total = ordenadas.reduce((a, b) => a + b.valor, 0);
 
   const data = {
     labels,
     datasets: [
       {
-        label: 'Óbitos',
+        label: 'Óbitos Registrados (SIM)',
         data: valores,
-        backgroundColor: [
-          '#08588E',
-          '#0B6B55',
-          '#C05621',
-          '#6B46C1',
-          '#D69E2E',
-          '#718096'
-        ],
-        borderWidth: 2,
-        borderColor: '#FFFFFF'
+        backgroundColor: '#08588E',
+        borderRadius: 4
       }
     ]
   };
 
   const options = {
+    indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'right' },
+      legend: { display: false },
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
-            return ` ${ctx.label}: ${formatNumber(ctx.parsed)} óbitos (${pct}%)`;
+            const val = ctx.parsed.x;
+            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+            return ` ${formatNumber(val)} óbitos (${pct}% do total)`;
           }
         }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Total de Óbitos Registrados (SIM)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Capítulo CID-10',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: {
+          autoSkip: false,
+          font: { size: 11 }
+        },
+        grid: { display: false }
       }
     }
   };
 
   return (
-    <div style={{ height: '320px', width: '100%' }}>
-      <Doughnut data={data} options={options} />
+    <div style={{ height: '360px', width: '100%' }}>
+      <Bar data={data} options={options} />
     </div>
   );
 }
 
 /**
- * 5. Óbitos por Faixa Etária (SIM)
+ * 5. Óbitos por Faixa Etária (SIM) - Ordenação Cronológica Progressiva
  */
 export function SimIdadeChart({ rows = [] }) {
-  const faixas = [...rows].filter(r => (r.faixa || r.categoria) && r.valor !== null);
-  const labels = faixas.map(r => r.faixa || r.categoria);
-  const valores = faixas.map(r => r.valor || 0);
+  // Agregar óbitos por faixa de idade caso haja múltiplos anos
+  const mapa = new Map();
+  rows.forEach(r => {
+    const f = r.faixa || r.categoria;
+    if (f && r.valor !== null && r.valor !== undefined) {
+      mapa.set(f, (mapa.get(f) || 0) + Number(r.valor));
+    }
+  });
+
+  // Função para ordenação cronológica estrita das faixas etárias
+  const getOrdemFaixa = (label) => {
+    const s = String(label).trim().toLowerCase();
+    if (s.includes('menor') || s.startsWith('<')) return 0;
+    const match = s.match(/^(\d+)/);
+    if (match) return parseInt(match[1], 10);
+    return 999; // 'Idade ignorada' ou sem informação ao final
+  };
+
+  const faixasOrdenadas = [...mapa.entries()]
+    .map(([faixa, valor]) => ({ faixa, valor }))
+    .filter(item => item.valor > 0 || !item.faixa.toLowerCase().includes('ignorad'))
+    .sort((a, b) => getOrdemFaixa(a.faixa) - getOrdemFaixa(b.faixa));
+
+  const labels = faixasOrdenadas.map(r => r.faixa);
+  const valores = faixasOrdenadas.map(r => r.valor);
+  const total = valores.reduce((a, b) => a + b, 0);
 
   const data = {
     labels,
@@ -332,7 +387,11 @@ export function SimIdadeChart({ rows = [] }) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${formatNumber(ctx.parsed.x)} óbitos`
+          label: (ctx) => {
+            const val = ctx.parsed.x;
+            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+            return ` ${formatNumber(val)} óbitos (${pct}%)`;
+          }
         }
       }
     },
@@ -355,13 +414,17 @@ export function SimIdadeChart({ rows = [] }) {
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
+        ticks: {
+          autoSkip: false,
+          font: { size: 11 }
+        },
         grid: { display: false }
       }
     }
   };
 
   return (
-    <div style={{ height: '320px', width: '100%' }}>
+    <div style={{ height: '360px', width: '100%' }}>
       <Bar data={data} options={options} />
     </div>
   );
@@ -645,13 +708,19 @@ export function PiramideEtariaChart({ rows = [] }) {
         label: 'Homens',
         data: homens.map(v => -v),
         backgroundColor: '#08588E',
-        borderRadius: 4
+        borderRadius: 4,
+        barThickness: 14,
+        maxBarThickness: 16,
+        stack: 'censo2022'
       },
       {
         label: 'Mulheres',
         data: mulheres,
         backgroundColor: '#0B6B55',
-        borderRadius: 4
+        borderRadius: 4,
+        barThickness: 14,
+        maxBarThickness: 16,
+        stack: 'censo2022'
       }
     ]
   };
@@ -670,6 +739,7 @@ export function PiramideEtariaChart({ rows = [] }) {
     },
     scales: {
       x: {
+        stacked: true,
         title: {
           display: true,
           text: 'População Residente (Homens à esquerda / Mulheres à direita)',
@@ -682,11 +752,16 @@ export function PiramideEtariaChart({ rows = [] }) {
         grid: { color: AXIS_GRID_COLOR }
       },
       y: {
+        stacked: true,
         title: {
           display: true,
           text: 'Grupo Etário (Censo 2022)',
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
+        },
+        ticks: {
+          autoSkip: false,
+          font: { size: 11 }
         },
         grid: { display: false }
       }
@@ -694,7 +769,7 @@ export function PiramideEtariaChart({ rows = [] }) {
   };
 
   return (
-    <div style={{ height: '380px', width: '100%' }}>
+    <div style={{ height: '420px', width: '100%' }}>
       <Bar data={data} options={options} />
     </div>
   );
@@ -1197,7 +1272,8 @@ export function SihEvolucaoChart({ rowsInternacoes = [], rowsValores = [] }) {
         data: internacoes,
         backgroundColor: '#08588E',
         borderRadius: 4,
-        yAxisID: 'y'
+        yAxisID: 'y',
+        order: 1
       },
       {
         type: 'line',
@@ -1207,7 +1283,8 @@ export function SihEvolucaoChart({ rowsInternacoes = [], rowsValores = [] }) {
         backgroundColor: '#0B6B55',
         pointRadius: 4,
         tension: 0.3,
-        yAxisID: 'y1'
+        yAxisID: 'y1',
+        order: 0
       }
     ]
   };
@@ -1299,7 +1376,8 @@ export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
         data: dias,
         backgroundColor: '#718096',
         borderRadius: 4,
-        yAxisID: 'y'
+        yAxisID: 'y',
+        order: 1
       },
       {
         type: 'line',
@@ -1309,7 +1387,8 @@ export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
         backgroundColor: '#C05621',
         pointRadius: 4,
         tension: 0.3,
-        yAxisID: 'y1'
+        yAxisID: 'y1',
+        order: 0
       }
     ]
   };
