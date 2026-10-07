@@ -333,5 +333,62 @@ test('18. Auditoria de robustez epidemiológica, resiliência de anos parciais e
   assert.ok(appCode.includes('normalizeRoute'), 'App.jsx deve normalizar hash rotas prevenindo inconsistência no estado ativo');
 });
 
+test('19. Validação de inclusão total das 5 categorias de Cor ou Raça (Censo IBGE) e gráfico horizontal', () => {
+  const chartsPath = path.join(projectRoot, 'src', 'components', 'NativeCharts.jsx');
+  const chartsCode = fs.readFileSync(chartsPath, 'utf8');
+  const gestaoPath = path.join(projectRoot, 'src', 'views', 'GestaoView.jsx');
+  const gestaoCode = fs.readFileSync(gestaoPath, 'utf8');
+
+  // 1. CorRacaChart deve existir, não renderizar Pie e usar Bar horizontal
+  const corRacaMatch = chartsCode.match(/export function CorRacaChart[\s\S]*?(?=export function PopulacaoEstimativasChart)/);
+  assert.ok(corRacaMatch, 'CorRacaChart deve existir');
+  const corRacaCode = corRacaMatch[0];
+
+  assert.ok(!corRacaCode.includes('<Pie'), 'CorRacaChart não deve renderizar Pie');
+  assert.ok(corRacaCode.includes('<Bar'), 'CorRacaChart deve renderizar Bar');
+  assert.match(corRacaCode, /indexAxis:\s*'y'/, 'CorRacaChart deve usar indexAxis: y');
+  assert.match(corRacaCode, /minBarLength:\s*8/, 'CorRacaChart deve definir minBarLength: 8 para garantir visibilidade de minorias (Amarela e Indígena)');
+
+  // 2. Todas as 5 categorias oficiais do Censo IBGE devem estar explicitamente declaradas
+  const categoriasEsperadas = ['Parda', 'Branca', 'Preta', 'Amarela', 'Indígena'];
+  for (const cat of categoriasEsperadas) {
+    assert.ok(corRacaCode.includes(`'${cat}'`), `CorRacaChart deve conter a categoria oficial '${cat}'`);
+  }
+
+  // 3. Suporte a alternância de censos e comparativo
+  assert.ok(corRacaCode.includes('modo === \'2022\''), 'CorRacaChart deve suportar Censo 2022');
+  assert.ok(corRacaCode.includes('modo === \'2010\''), 'CorRacaChart deve suportar Censo 2010');
+  assert.ok(corRacaCode.includes('modo === \'comparativo\''), 'CorRacaChart deve suportar Comparativo');
+
+  // 4. GestaoView deve passar todas as rows e atualizar o título
+  assert.match(gestaoCode, /const corRacaRows = qCorRaca\?\.rows \|\| \[\];/, 'GestaoView deve carregar todas as rows sem corte estático');
+  assert.ok(gestaoCode.includes('Cor ou Raça (Censo IBGE)'), 'Aba de Cor ou Raça deve refletir a totalidade do Censo IBGE');
+
+  // 5. Teste de integridade numérica da fonte pública real (dashboard-data.json)
+  const dataPath = path.join(projectRoot, 'public', 'data', 'dashboard-data.json');
+  const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  const rows = d.queries.populacao_cor_raca.rows;
+
+  const rows2022 = rows.filter(r => r.ano === 2022);
+  const rows2010 = rows.filter(r => r.ano === 2010);
+
+  assert.strictEqual(rows2022.length, 5, 'Censo 2022 deve conter exatamente 5 categorias');
+  assert.strictEqual(rows2010.length, 5, 'Censo 2010 deve conter exatamente 5 categorias');
+
+  const total2022 = rows2022.reduce((acc, r) => acc + r.valor, 0);
+  const total2010 = rows2010.reduce((acc, r) => acc + r.valor, 0);
+
+  // Total de 2022 deve fechar exatamente em 86.619 pessoas (100% da população recenseada)
+  assert.strictEqual(total2022, 86619, 'Soma de todas as 5 categorias do Censo 2022 deve ser exatamente 86.619');
+  assert.strictEqual(total2010, 77565, 'Soma de todas as 5 categorias do Censo 2010 deve ser exatamente 77.565');
+
+  // Garantir que Amarela e Indígena estão presentes no dataset oficial
+  const amarela2022 = rows2022.find(r => r.categoria === 'Amarela')?.valor;
+  const indigena2022 = rows2022.find(r => r.categoria === 'Indígena')?.valor;
+  assert.strictEqual(amarela2022, 178, 'Amarela em 2022 deve ser 178 pessoas');
+  assert.strictEqual(indigena2022, 32, 'Indígena em 2022 deve ser 32 pessoas');
+});
+
+
 
 

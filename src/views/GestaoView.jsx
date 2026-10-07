@@ -41,14 +41,14 @@ export default function GestaoView({ data, onRouteChange }) {
 
   const faixasRows = qFaixas?.rows || [];
   const estimativasRows = qEstimativas?.rows || [];
-  const corRacaRows = (qCorRaca?.rows || []).filter(r => r.ano === 2022);
+  const corRacaRows = qCorRaca?.rows || [];
   const esgotoRows = qEsgoto?.rows || [];
   const lixoRows = qLixo?.rows || [];
   const censoRows = qCenso?.rows || [];
 
   const tabItems = [
     { id: 'piramide', label: 'Pirâmide Etária & Demografia', icon: Users },
-    { id: 'cor_raca', label: 'Cor ou Raça (Censo 2022)', icon: Users },
+    { id: 'cor_raca', label: 'Cor ou Raça (Censo IBGE)', icon: Users },
     { id: 'saneamento', label: 'Saneamento Básico & Território', icon: Droplets }
   ];
 
@@ -133,10 +133,11 @@ export default function GestaoView({ data, onRouteChange }) {
       <TabPanel id="cor_raca" value={activeTab} baseLabel="Cor ou Raça">
         <div className="panel-grid single">
           <ChartCard
-            title="Distribuição da População por Cor ou Raça (Censo 2022)"
-            description="Autodeclaração étnico-racial dos residentes em Unaí segundo o IBGE."
+            title="Distribuição da População por Cor ou Raça (Censo Demográfico IBGE)"
+            description="Autodeclaração étnico-racial da totalidade dos residentes recenseados em Unaí (Parda, Branca, Preta, Amarela e Indígena)."
             query={qCorRaca}
             queryId="populacao_cor_raca"
+            rows={corRacaRows}
           >
             <CorRacaChart rows={corRacaRows} />
           </ChartCard>

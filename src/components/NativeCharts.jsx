@@ -1013,45 +1013,258 @@ export function PiramideEtariaChart({ rows = [] }) {
 }
 
 /**
- * 11. População por Cor / Raça (Censo 2022)
+ * 11. População por Cor ou Raça (Censo Demográfico IBGE)
  */
 export function CorRacaChart({ rows = [] }) {
-  const labels = rows.map(r => r.cor || r.categoria);
-  const valores = rows.map(r => r.valor || 0);
-  const total = valores.reduce((a, b) => a + b, 0);
+  const [modo, setModo] = useState('2022');
 
-  const data = {
-    labels,
-    datasets: [
-      {
-        data: valores,
-        backgroundColor: ['#D69E2E', '#08588E', '#0B6B55', '#805AD5', '#718096'],
-        borderWidth: 2,
-        borderColor: '#FFFFFF'
-      }
-    ]
+  // As 5 categorias oficiais do Censo IBGE
+  const categoriasOficiais = ['Parda', 'Branca', 'Preta', 'Amarela', 'Indígena'];
+
+  // Paleta de cores padronizada e institucional para cada categoria
+  const coresPorCategoria = {
+    'Parda': '#B7791F',
+    'Branca': '#08588E',
+    'Preta': '#2D3748',
+    'Amarela': '#DD6B20',
+    'Indígena': '#0B6B55'
   };
 
-  const options = {
+  // Separação dos dados por ano censitário
+  const dados2022 = categoriasOficiais.map(cat => {
+    const r = rows.find(item => (item.categoria === cat || item.cor === cat) && item.ano === 2022);
+    const fallback = rows.find(item => (item.categoria === cat || item.cor === cat) && !item.ano);
+    return {
+      categoria: cat,
+      valor: r?.valor ?? fallback?.valor ?? 0,
+      cor: coresPorCategoria[cat]
+    };
+  });
+
+  const dados2010 = categoriasOficiais.map(cat => {
+    const r = rows.find(item => (item.categoria === cat || item.cor === cat) && item.ano === 2010);
+    return {
+      categoria: cat,
+      valor: r?.valor ?? 0,
+      cor: coresPorCategoria[cat]
+    };
+  });
+
+  const total2022 = dados2022.reduce((acc, curr) => acc + curr.valor, 0);
+  const total2010 = dados2010.reduce((acc, curr) => acc + curr.valor, 0);
+
+  const temAmbosCensos = rows.some(r => r.ano === 2010) && rows.some(r => r.ano === 2022);
+
+  // Seleção dos dados com base no modo ativo
+  const dadosAtivos = modo === '2010' ? dados2010 : dados2022;
+  const totalAtivo = modo === '2010' ? total2010 : total2022;
+
+  let datasets = [];
+
+  if (modo === 'comparativo') {
+    datasets = [
+      {
+        label: 'Censo 2010',
+        data: dados2010.map(d => d.valor),
+        backgroundColor: '#718096',
+        borderRadius: 4,
+        minBarLength: 8,
+        barPercentage: 0.8,
+        categoryPercentage: 0.85
+      },
+      {
+        label: 'Censo 2022',
+        data: dados2022.map(d => d.valor),
+        backgroundColor: '#08588E',
+        borderRadius: 4,
+        minBarLength: 8,
+        barPercentage: 0.8,
+        categoryPercentage: 0.85
+      }
+    ];
+  } else {
+    datasets = [
+      {
+        label: modo === '2010' ? 'População Censo 2010' : 'População Censo 2022',
+        data: dadosAtivos.map(d => d.valor),
+        backgroundColor: dadosAtivos.map(d => d.cor),
+        borderRadius: 4,
+        minBarLength: 8
+      }
+    ];
+  }
+
+  const chartData = {
+    labels: categoriasOficiais,
+    datasets
+  };
+
+  const chartOptions = {
+    indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'right' },
+      legend: {
+        display: modo === 'comparativo',
+        position: 'top'
+      },
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const val = ctx.parsed || 0;
-            const pct = total > 0 ? ((val / total) * 100).toFixed(1).replace('.', ',') : '0';
-            return ` ${ctx.label}: ${formatNumber(val)} pessoas (${pct}%)`;
+            const val = ctx.parsed.x;
+            const cat = ctx.label;
+            const dsLabel = ctx.dataset.label ? `${ctx.dataset.label}: ` : '';
+            const totalRef = ctx.dataset.label?.includes('2010') ? total2010 : total2022;
+            const pct = totalRef > 0 ? ((val / totalRef) * 100).toFixed(1).replace('.', ',') : '0';
+            return ` ${dsLabel}${cat}: ${formatNumber(val)} pessoas (${pct}% do total)`;
           }
         }
+      }
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'População Residente Recenseada (Pessoas)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: {
+          callback: (v) => formatNumber(v)
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Autodeclaração Étnico-Racial',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: {
+          font: { weight: '600', size: 12 }
+        },
+        grid: { display: false }
       }
     }
   };
 
   return (
-    <div style={{ height: '280px', width: '100%' }}>
-      <Pie data={data} options={options} />
+    <div style={{ width: '100%' }}>
+      {temAmbosCensos && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+          <div className="segmented" role="group" aria-label="Seletor de Censo Demográfico">
+            <button
+              type="button"
+              aria-pressed={modo === '2022'}
+              onClick={() => setModo('2022')}
+            >
+              Censo 2022 (Mais recente)
+            </button>
+            <button
+              type="button"
+              aria-pressed={modo === '2010'}
+              onClick={() => setModo('2010')}
+            >
+              Censo 2010
+            </button>
+            <button
+              type="button"
+              aria-pressed={modo === 'comparativo'}
+              onClick={() => setModo('comparativo')}
+            >
+              Comparativo (2010 x 2022)
+            </button>
+          </div>
+          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            Total recenseado: <strong>{formatNumber(modo === '2010' ? total2010 : total2022)}</strong> pessoas
+          </span>
+        </div>
+      )}
+
+      {/* Grid de Destaques: Todas as 5 categorias + Total 100% visíveis */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+          gap: '8px', 
+          marginBottom: '16px' 
+        }}
+        aria-label="Detalhamento das 5 categorias étnico-raciais"
+      >
+        {categoriasOficiais.map(cat => {
+          const item = dadosAtivos.find(d => d.categoria === cat) || { valor: 0 };
+          const pct = totalAtivo > 0 ? ((item.valor / totalAtivo) * 100).toFixed(1).replace('.', ',') : '0';
+          const cor = coresPorCategoria[cat];
+          const val2010 = dados2010.find(d => d.categoria === cat)?.valor || 0;
+          const val2022 = dados2022.find(d => d.categoria === cat)?.valor || 0;
+          const dif = val2022 - val2010;
+          
+          return (
+            <div 
+              key={cat} 
+              style={{ 
+                background: 'var(--surface)', 
+                border: '1px solid var(--border)', 
+                borderLeft: `4px solid ${cor}`, 
+                padding: '8px 10px',
+                borderRadius: 'var(--radius)'
+              }}
+            >
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {cat}
+              </div>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--blue-dark)', marginTop: '2px' }}>
+                {formatNumber(item.valor)}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                {pct}% do total
+              </div>
+              {modo === 'comparativo' && (
+                <div style={{ fontSize: '0.68rem', marginTop: '2px', color: dif >= 0 ? 'var(--blue-dark)' : '#C53030', fontWeight: 600 }}>
+                  {dif >= 0 ? `+${formatNumber(dif)}` : formatNumber(dif)}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <div 
+          style={{ 
+            background: 'var(--subtle)', 
+            border: '1px solid var(--border)', 
+            borderLeft: '4px solid var(--blue)', 
+            padding: '8px 10px',
+            borderRadius: 'var(--radius)'
+          }}
+        >
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Total 100%
+          </div>
+          <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--blue)', marginTop: '2px' }}>
+            {formatNumber(totalAtivo)}
+          </div>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+            100,0% recenseados
+          </div>
+          {modo === 'comparativo' && (
+            <div style={{ fontSize: '0.68rem', marginTop: '2px', color: 'var(--blue)', fontWeight: 600 }}>
+              +{formatNumber(total2022 - total2010)} (+11,7%)
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div style={{ height: '280px', width: '100%' }}>
+        <Bar data={chartData} options={chartOptions} />
+      </div>
+
+      <div style={{ marginTop: '14px', padding: '10px 14px', background: 'var(--subtle)', border: '1px solid var(--border)', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+        <strong>Metodologia do Censo Demográfico:</strong> O IBGE pesquisa a autodeclaração étnico-racial em <strong>5 categorias oficiais</strong>: Parda, Branca, Preta, Amarela e Indígena. Em Unaí, a <strong>totalidade dos 86.619 residentes (100%)</strong> recenseados em 2022 e dos <strong>77.565 residentes (100%)</strong> em 2010 está plenamente contemplada e detalhada nesta série oficial.
+        {modo === 'comparativo' && (
+          <span> No período intercensitário (2010–2022), destacam-se a expansão de +17,0% na população autodeclarada parda (+6.914) e de +63,8% na população preta (+3.346), refletindo tanto a dinâmica demográfica quanto o fortalecimento da autoidentificação étnico-racial no município.</span>
+        )}
+      </div>
     </div>
   );
 }
