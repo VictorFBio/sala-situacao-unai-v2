@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useId, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useId, useRef } from 'react';
 import { 
   filtrarServicos, 
   projetarCamadas, 
@@ -113,6 +113,7 @@ export default function BuscaSaudeMap({
   const [busca, setBusca] = useState('');
   const [grupoFiltro, setGrupoFiltro] = useState('all');
   const [rotulosAtivos, setRotulosAtivos] = useState(vistaInicial === 'urbano');
+  const [copiado, setCopiado] = useState(false);
 
   const svgRef = useRef(null);
   const gesto = useRef({ pontos: new Map(), modo: null, suprimirClique: false });
@@ -225,10 +226,55 @@ export default function BuscaSaudeMap({
     setZoom(1);
     setCentro(null);
     setSelecionado(null);
+    setCopiado(false);
     setRotulosAtivos(v === 'urbano');
     gesto.current.modo = null;
     gesto.current.pontos.clear();
   };
+
+  const focarPonto = (p) => {
+    if (!p) return;
+    setSelecionado(p.codigo);
+    setCopiado(false);
+    if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+    const proximaVista = (p.rural && vista === 'urbano') 
+      ? 'municipio' 
+      : (vista === 'entorno' ? (p.rural ? 'municipio' : 'urbano') : vista);
+    if (proximaVista !== vista) {
+      setVista(proximaVista);
+    }
+    const targetZoom = Math.max(zoom, 2.5);
+    setZoom(targetZoom);
+    const alvoBounds = proximaVista === 'urbano' 
+      ? limitesCidade(redeRows) 
+      : (proximaVista === 'entorno' ? CONTEXTO_BOUNDS : boundsPadrao);
+    setCentro(limitarCentroNoRaster(alvoBounds, targetZoom, [p.x, p.y], satMetadata.bounds.contexto) || [p.x, p.y]);
+  };
+
+  // Foco automático e enquadramento ao filtrar serviços
+  useEffect(() => {
+    if (!busca.trim()) return;
+    if (filtrados.length === 1) {
+      const p = filtrados[0];
+      setSelecionado(p.codigo);
+      setCopiado(false);
+      if (!Number.isFinite(p.x) || !Number.isFinite(p.y)) return;
+      const proximaVista = (p.rural && vista === 'urbano') 
+        ? 'municipio' 
+        : (vista === 'entorno' ? (p.rural ? 'municipio' : 'urbano') : vista);
+      if (proximaVista !== vista) {
+        setVista(proximaVista);
+      }
+      const targetZoom = Math.max(zoom, 2.5);
+      setZoom(targetZoom);
+      const alvoBounds = proximaVista === 'urbano' 
+        ? limitesCidade(redeRows) 
+        : (proximaVista === 'entorno' ? CONTEXTO_BOUNDS : boundsPadrao);
+      setCentro(limitarCentroNoRaster(alvoBounds, targetZoom, [p.x, p.y], satMetadata.bounds.contexto) || [p.x, p.y]);
+    } else if (filtrados.length > 1 && filtrados.every(p => p.rural) && vista === 'urbano') {
+      setVista('municipio');
+    }
+  }, [busca, filtrados]);
 
   const aproximar = (g) => {
     const pts = g.pontos;
@@ -375,7 +421,14 @@ export default function BuscaSaudeMap({
 
   const handleCopiarEndereco = (endereco) => {
     if (!endereco) return;
-    navigator.clipboard?.writeText?.(endereco);
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(endereco)
+        .then(() => {
+          setCopiado(true);
+          setTimeout(() => setCopiado(false), 2000);
+        })
+        .catch(() => {});
+    }
   };
 
   return (
@@ -471,10 +524,23 @@ export default function BuscaSaudeMap({
         {busca && (
           <button 
             type="button" 
-            onClick={() => setBusca('')}
+            onClick={() => {
+              setBusca('');
+              setSelecionado(null);
+            }}
             style={{ border: 'none', background: 'transparent', color: 'var(--blue)', fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}
           >
             Limpar busca
+          </button>
+        )}
+        {busca && filtrados.some(p => p.rural) && vista === 'urbano' && (
+          <button
+            type="button"
+            onClick={() => trocarVista('municipio')}
+            style={{ border: 'none', background: 'var(--blue-light)', color: 'var(--blue-dark)', fontSize: '0.78rem', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}
+            title="Exibir todo o território municipal para ver estabelecimentos da zona rural"
+          >
+            Ver unidades rurais no município
           </button>
         )}
       </div>
@@ -581,11 +647,11 @@ export default function BuscaSaudeMap({
                       tabIndex="0" 
                       aria-label={nome} 
                       aria-pressed={ativo} 
-                      onClick={() => cluster ? aproximar(g) : setSelecionado(p.codigo)} 
+                      onClick={() => cluster ? aproximar(g) : focarPonto(p)} 
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          cluster ? aproximar(g) : setSelecionado(p.codigo);
+                          cluster ? aproximar(g) : focarPonto(p);
                         }
                       }}
                     >
@@ -723,7 +789,7 @@ export default function BuscaSaudeMap({
                   style={{ width: '100%', justifyContent: 'center' }}
                   onClick={() => handleCopiarEndereco(atual.endereco)}
                 >
-                  Copiar endereço
+                  {copiado ? 'Endereço copiado!' : 'Copiar endereço'}
                 </button>
               </div>
             </div>
@@ -747,7 +813,7 @@ export default function BuscaSaudeMap({
                   <button 
                     type="button" 
                     aria-pressed={selecionado === p.codigo} 
-                    onClick={() => setSelecionado(p.codigo)}
+                    onClick={() => focarPonto(p)}
                   >
                     <svg viewBox="-12 -12 24 24" aria-hidden="true">
                       <Simbolo grupo={p.grupo} />

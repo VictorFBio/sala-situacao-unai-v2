@@ -170,6 +170,7 @@ export default function HospitalarView({ data, onRouteChange }) {
                 <input
                   type="search"
                   placeholder="Filtrar tipo..."
+                  aria-label="Filtrar tipo de estabelecimento"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   style={{ padding: '5px 8px', fontSize: '0.8rem', border: '1px solid var(--border-strong)', borderRadius: 'var(--radius)' }}

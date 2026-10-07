@@ -5,8 +5,9 @@ export function serieAnual(rows){if(!rows.length)return [];const m=new Map(rows.
 export function gerarCSV(rows,source,queryId){
   const campos=[...new Set(rows.flatMap(r=>Object.keys(r)))].filter(k=>k!=='geometria');
   const meta=['consulta','fonte','periodo_fonte','coletado_em','url_fonte','unidade','municipio','codigo_ibge','recorte','limitacoes'];
-  const unidade=source.metricDefinitions?.find(d=>d.label==='Unidade')?.definition??'Consultar unidade nas colunas e na fonte';
-  const base=[queryId,source.label,source.period,source.executedAt,source.links?.[0]?.href??'',unidade,'Unaí (MG)','3170404',source.filters?.join(' | ')??'',source.assumptions?.join(' | ')??''];
+  const src=source||{};
+  const unidade=src.metricDefinitions?.find(d=>d.label==='Unidade')?.definition??'Consultar unidade nas colunas e na fonte';
+  const base=[queryId,src.label??'',src.period??'',src.executedAt??'',src.links?.[0]?.href??'',unidade,'Unaí (MG)','3170404',src.filters?.join(' | ')??'',src.assumptions?.join(' | ')??''];
   const celula=v=>{if(v==null)return '';let t=typeof v==='number'?String(v).replace('.',','):String(v);if(typeof v==='string'&&/^[\s]*[=+@-]/.test(t))t="'"+t;return /[;"\r\n]/.test(t)?'"'+t.replaceAll('"','""')+'"':t;};
   return '\ufeff'+[meta.concat(campos).map(celula).join(';'),...rows.map(r=>base.concat(campos.map(k=>r[k])).map(celula).join(';'))].join('\r\n');
 }

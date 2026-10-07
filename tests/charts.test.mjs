@@ -162,4 +162,176 @@ test('13. Validação do gráfico de Dengue e Arboviroses (DengueChart e DengueD
   // Verificar ano parcial de 2026
   const row2026 = dengueRows.find(r => r.ano === 2026);
   assert.strictEqual(row2026.soma_observada, 2006, 'Ano de 2026 deve ter soma_observada de 2.006');
+
+  // Validação do Eixo Duplo no modo 'Todas as Arboviroses'
+  assert.match(dengueCode, /yAxisID:\s*'y'/, 'Dengue deve utilizar o eixo esquerdo (y)');
+  assert.match(dengueCode, /yAxisID:\s*'y1'/, 'Chikungunya e Zika devem utilizar o eixo direito (y1)');
+  assert.match(dengueCode, /y1:\s*\{[\s\S]*?position:\s*'right'/, 'Escala y1 deve estar posicionada à direita');
+  assert.match(dengueCode, /type:\s*'line'[\s\S]*?Chikungunya/s, 'Chikungunya deve ser renderizada como linha destacada no modo comparativo');
+  assert.match(dengueCode, /type:\s*'line'[\s\S]*?Zika/s, 'Zika deve ser renderizada como linha destacada no modo comparativo');
+  assert.match(dengueCode, /suggestedMax:\s*45/, 'Eixo y1 deve ter escala adaptada de até 45 para garantir visibilidade');
 });
+
+test('14. Validação do foco cartográfico e busca no módulo Busca Saúde', () => {
+  const mapPath = path.join(projectRoot, 'src', 'components', 'BuscaSaudeMap.jsx');
+  const mapCode = fs.readFileSync(mapPath, 'utf8');
+
+  // Validação dos manipuladores de foco e centralização
+  assert.ok(mapCode.includes('focarPonto'), 'BuscaSaudeMap deve possuir função focarPonto para centralização nos estabelecimentos');
+  assert.ok(mapCode.includes('limitarCentroNoRaster'), 'BuscaSaudeMap deve utilizar limitarCentroNoRaster para enquadramento cartográfico');
+  assert.ok(mapCode.includes('trocarVista'), 'BuscaSaudeMap deve suportar transição de vista entre município, urbano e entorno');
+
+  // Validação funcional da busca e filtragem
+  const dataPath = path.join(projectRoot, 'public', 'data', 'mapa-servicos.json');
+  const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  const rows = d.queries.rede_geografica.rows;
+
+  const normalizar = t => String(t ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const filtrar = (texto, grupo = 'all') => {
+    const term = normalizar(texto).trim();
+    return rows.filter(r => 
+      (grupo === 'all' || r.grupo === grupo) &&
+      (!term || normalizar([r.codigo, r.nome, r.bairro, r.endereco].join(' ')).includes(term))
+    );
+  };
+
+  // Teste de busca por nome
+  const resHospital = filtrar('Hospital Municipal');
+  assert.ok(resHospital.length >= 1, 'Busca por Hospital Municipal deve retornar ao menos 1 resultado');
+  assert.strictEqual(resHospital[0].codigo, 'S03');
+
+  // Teste de busca por distrito rural (Garapuava)
+  const resRural = filtrar('Garapuava');
+  assert.strictEqual(resRural.length, 1, 'Busca por Garapuava deve retornar exatamente 1 ESF rural');
+  assert.strictEqual(resRural[0].rural, true, 'ESF Garapuava deve ter indicador rural: true');
+
+  // Teste de busca por bairro (Cachoeira)
+  const resBairro = filtrar('Cachoeira');
+  assert.ok(resBairro.length >= 1, 'Busca por Cachoeira deve retornar estabelecimentos no bairro');
+
+  // Teste de busca sem distinção de acentuação (Policlinica vs Policlínica)
+  const resSemAcento = filtrar('policlinica');
+  const resComAcento = filtrar('policlínica');
+  assert.strictEqual(resSemAcento.length, resComAcento.length, 'Busca deve ignorar acentos diacríticos');
+});
+
+test('15. Auditoria de integridade de botões segmentados, tooltips e downloads CSV', async () => {
+  const dadosUtils = await import('../src/utils/dados-modelo.js');
+  const dataPath = path.join(projectRoot, 'public', 'data', 'dashboard-data.json');
+  const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+  // 1. Validar que todas as consultas geram CSV válido com UTF-8 BOM e ponto e vírgula
+  for (const [key, q] of Object.entries(d.queries)) {
+    if (!q.rows || !q.rows.length || !q.source) continue;
+    const csv = dadosUtils.gerarCSV(q.rows, q.source, key);
+    assert.ok(csv.startsWith('\ufeff'), `CSV da consulta ${key} deve iniciar com UTF-8 BOM`);
+    assert.ok(csv.includes('consulta;fonte;periodo_fonte'), `CSV da consulta ${key} deve conter metadados institucionais`);
+    assert.ok(csv.includes(key), `CSV da consulta ${key} deve conter o ID da consulta`);
+  }
+
+  // 2. Validar botões segmentados em NativeCharts e BuscaSaudeMap
+  const chartsPath = path.join(projectRoot, 'src', 'components', 'NativeCharts.jsx');
+  const chartsCode = fs.readFileSync(chartsPath, 'utf8');
+  assert.match(chartsCode, /aria-pressed=\{modo === 'dengue'\}/, 'Botão Dengue deve ter aria-pressed');
+  assert.match(chartsCode, /aria-pressed=\{modo === 'chikungunya'\}/, 'Botão Chikungunya deve ter aria-pressed');
+  assert.match(chartsCode, /aria-pressed=\{modo === 'todas'\}/, 'Botão Todas deve ter aria-pressed');
+
+  const mapPath = path.join(projectRoot, 'src', 'components', 'BuscaSaudeMap.jsx');
+  const mapCode = fs.readFileSync(mapPath, 'utf8');
+  assert.match(mapCode, /aria-pressed=\{vista === 'municipio'\}/, 'Botão Município deve ter aria-pressed');
+  assert.match(mapCode, /aria-pressed=\{vista === 'urbano'\}/, 'Botão Urbano deve ter aria-pressed');
+  assert.match(mapCode, /aria-pressed=\{fundo === 'malha'\}/, 'Botão Malha deve ter aria-pressed');
+  assert.match(mapCode, /aria-pressed=\{fundo === 'satelite'\}/, 'Botão Satélite deve ter aria-pressed');
+});
+
+test('16. Validação de ausência de truncamento em Imunização, formatação decimal pt-BR e resiliência em CSV', async () => {
+  const chartsPath = path.join(projectRoot, 'src', 'components', 'NativeCharts.jsx');
+  const chartsCode = fs.readFileSync(chartsPath, 'utf8');
+
+  // 1. ImunizacaoChart: suggestedMax deve permitir valores > 100% (ex: BCG 117,9%) sem corte
+  const imunoMatch = chartsCode.match(/export function ImunizacaoChart[\s\S]*?return \(/);
+  assert.ok(imunoMatch, 'ImunizacaoChart deve existir');
+  const imunoCode = imunoMatch[0];
+  assert.match(imunoCode, /suggestedMax:\s*100/, 'ImunizacaoChart deve utilizar suggestedMax: 100 para não cortar coberturas > 100% como BCG (117,9%)');
+  assert.ok(!imunoCode.includes('max: 100,'), 'ImunizacaoChart não deve truncar rigidamente com max: 100');
+  assert.match(imunoCode, /replace\('\.',\s*','\)/, 'ImunizacaoChart deve formatar percentuais com vírgula decimal pt-BR');
+
+  // 2. SihDiasChart: média de permanência com formato pt-BR
+  const sihDiasMatch = chartsCode.match(/export function SihDiasChart[\s\S]*?return \(/);
+  assert.ok(sihDiasMatch, 'SihDiasChart deve existir');
+  const sihDiasCode = sihDiasMatch[0];
+  assert.match(sihDiasCode, /replace\('\.',\s*','\)/, 'SihDiasChart deve formatar média de permanência com vírgula no padrão pt-BR');
+
+  // 3. SragChart: ticks formatados com formatNumber
+  const sragMatch = chartsCode.match(/export function SragChart[\s\S]*?return \(/);
+  assert.ok(sragMatch, 'SragChart deve existir');
+  const sragCode = sragMatch[0];
+  assert.match(sragCode, /callback:\s*v\s*=>\s*formatNumber\(v\)/, 'SragChart deve possuir callback formatNumber nos ticks de Y');
+
+  // 4. Teste de resiliência de gerarCSV com objeto source vazio ou campos nulos
+  const dadosUtils = await import('../src/utils/dados-modelo.js');
+  const rowsTeste = [{ id: 1, valor: 42.5 }];
+  const csvResiliente = dadosUtils.gerarCSV(rowsTeste, {}, 'consulta_resiliente');
+  assert.ok(csvResiliente.startsWith('\ufeff'), 'CSV com source vazio deve iniciar com UTF-8 BOM');
+  assert.ok(csvResiliente.includes('42,5'), 'CSV resiliente deve formatar decimal com vírgula');
+});
+
+test('17. Auditoria de otimização de bundle (chunks), proximaVista cartográfica e consistência pt-BR em ApsC1', () => {
+  // 1. ApsC1Chart: ticks com formatNumber
+  const chartsPath = path.join(projectRoot, 'src', 'components', 'NativeCharts.jsx');
+  const chartsCode = fs.readFileSync(chartsPath, 'utf8');
+  const apsC1Match = chartsCode.match(/export function ApsC1Chart[\s\S]*?return \(/);
+  assert.ok(apsC1Match, 'ApsC1Chart deve existir');
+  assert.match(apsC1Match[0], /callback:\s*v\s*=>\s*formatNumber\(v\)/, 'ApsC1Chart deve possuir callback formatNumber nos ticks de Y');
+
+  // 2. BuscaSaudeMap: cálculo explícito de proximaVista e alvoBounds
+  const mapPath = path.join(projectRoot, 'src', 'components', 'BuscaSaudeMap.jsx');
+  const mapCode = fs.readFileSync(mapPath, 'utf8');
+  assert.ok(mapCode.includes('proximaVista'), 'BuscaSaudeMap deve calcular proximaVista explicitamente');
+  assert.ok(mapCode.includes('alvoBounds'), 'BuscaSaudeMap deve calcular alvoBounds com base na próxima vista');
+
+  // 3. HospitalarView: acessibilidade no filtro
+  const hospPath = path.join(projectRoot, 'src', 'views', 'HospitalarView.jsx');
+  const hospCode = fs.readFileSync(hospPath, 'utf8');
+  assert.match(hospCode, /aria-label="Filtrar tipo de estabelecimento"/, 'Campo de busca de tipologia hospitalar deve possuir aria-label');
+
+  // 4. Vite config: code splitting de pacotes pesados para resolução de chunks > 500kB
+  const vitePath = path.join(projectRoot, 'vite.config.js');
+  const viteCode = fs.readFileSync(vitePath, 'utf8');
+  assert.ok(viteCode.includes('manualChunks'), 'vite.config.js deve conter manualChunks para modularização de vendor e charts');
+});
+
+test('18. Auditoria de robustez epidemiológica, resiliência de anos parciais e acessibilidade no portal', () => {
+  const chartsPath = path.join(projectRoot, 'src', 'components', 'NativeCharts.jsx');
+  const chartsCode = fs.readFileSync(chartsPath, 'utf8');
+
+  // 1. SinascPrenatalChart: ordenação numérica estrita e filtro de nulos
+  const prenatalMatch = chartsCode.match(/export function SinascPrenatalChart[\s\S]*?return \(/);
+  assert.ok(prenatalMatch, 'SinascPrenatalChart deve existir');
+  assert.match(prenatalMatch[0], /filter\(Boolean\)\)\]\.sort\(\(a,\s*b\)\s*=>\s*a\s*-\s*b\)/, 'SinascPrenatalChart deve filtrar anos nulos e ordenar numericamente');
+
+  // 2. DengueChart: acessibilidade no grupo segmentado e nota explicativa
+  const dengueMatch = chartsCode.match(/export function DengueChart[\s\S]*?return \([\s\S]*?<\/div>\s*\);/);
+  assert.ok(dengueMatch, 'DengueChart deve existir');
+  assert.match(dengueMatch[0], /role="group"\s+aria-label="Modo de visualização de arboviroses"/, 'Segmented de DengueChart deve ter role="group" e aria-label');
+  assert.match(dengueMatch[0], /modo === 'chikungunya' && \(/, 'DengueChart deve possuir nota explicativa dedicada para o modo Chikungunya');
+  assert.match(dengueMatch[0], /isParcial/, 'DengueChart deve verificar anos parciais dinamicamente');
+
+  // 3. DengueDatasusChart e PopulacaoEstimativasChart: rowsValidas
+  assert.match(chartsCode, /export function DengueDatasusChart[\s\S]*?rowsValidas = rows\.filter\(r => r\.ano\)/, 'DengueDatasusChart deve filtrar rows por ano');
+  assert.match(chartsCode, /export function PopulacaoEstimativasChart[\s\S]*?rowsValidas = rows\.filter\(r => r\.ano\)/, 'PopulacaoEstimativasChart deve filtrar rows por ano');
+
+  // 4. BuscaSaudeMap: feedback visual de cópia de endereço
+  const mapPath = path.join(projectRoot, 'src', 'components', 'BuscaSaudeMap.jsx');
+  const mapCode = fs.readFileSync(mapPath, 'utf8');
+  assert.ok(mapCode.includes('copiado'), 'BuscaSaudeMap deve possuir estado copiado para feedback ao usuário');
+  assert.match(mapCode, /copiado \? 'Endereço copiado!' : 'Copiar endereço'/, 'Botão de cópia deve fornecer feedback textual instantâneo');
+
+  // 5. App.jsx: normalização de rota
+  const appPath = path.join(projectRoot, 'src', 'App.jsx');
+  const appCode = fs.readFileSync(appPath, 'utf8');
+  assert.ok(appCode.includes('normalizeRoute'), 'App.jsx deve normalizar hash rotas prevenindo inconsistência no estado ativo');
+});
+
+
+

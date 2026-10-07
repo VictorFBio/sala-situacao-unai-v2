@@ -171,7 +171,7 @@ export function ObitosAnuaisChart({ rows = [] }) {
  * 3. Consultas Pré-Natal (SINASC)
  */
 export function SinascPrenatalChart({ rows = [] }) {
-  const anos = [...new Set(rows.map(r => r.ano))].sort().slice(-6);
+  const anos = [...new Set(rows.map(r => r.ano).filter(Boolean))].sort((a, b) => a - b).slice(-6);
 
   const datasets = [
     {
@@ -295,7 +295,7 @@ export function CausasMorteChart({ rows = [], limit = 10 }) {
         callbacks: {
           label: (ctx) => {
             const val = ctx.parsed.x;
-            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+            const pct = total > 0 ? ((val / total) * 100).toFixed(1).replace('.', ',') : '0';
             return ` ${formatNumber(val)} óbitos (${pct}% do total)`;
           }
         }
@@ -389,7 +389,7 @@ export function SimIdadeChart({ rows = [] }) {
         callbacks: {
           label: (ctx) => {
             const val = ctx.parsed.x;
-            const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+            const pct = total > 0 ? ((val / total) * 100).toFixed(1).replace('.', ',') : '0';
             return ` ${formatNumber(val)} óbitos (${pct}%)`;
           }
         }
@@ -463,45 +463,76 @@ export function DengueChart({ rows = [] }) {
   if (modo === 'dengue') {
     datasets = [
       {
+        type: 'bar',
         label: 'Casos Notificados de Dengue',
         data: valoresDengue,
         backgroundColor: anosUnicos.map(ano => ano === 2024 ? '#9C4221' : '#C05621'),
         hoverBackgroundColor: '#7B341E',
         borderRadius: 4,
-        barPercentage: 0.65
+        barPercentage: 0.65,
+        yAxisID: 'y'
       }
     ];
   } else if (modo === 'chikungunya') {
     datasets = [
       {
+        type: 'bar',
         label: 'Casos Notificados de Chikungunya',
         data: valoresChik,
         backgroundColor: '#805AD5',
         hoverBackgroundColor: '#6B46C1',
         borderRadius: 4,
-        barPercentage: 0.65
+        barPercentage: 0.65,
+        yAxisID: 'y'
       }
     ];
   } else {
-    // Modo comparativo com as 3 arboviroses
+    // Modo comparativo com as 3 arboviroses (Eixo duplo)
+    // Dengue no eixo esquerdo (y) em barras de milhar
+    // Chikungunya e Zika no eixo direito (y1) com linhas e pontos destacados
     datasets = [
       {
-        label: 'Dengue',
+        type: 'bar',
+        label: 'Dengue (Eixo Esquerdo)',
         data: valoresDengue,
         backgroundColor: '#C05621',
-        borderRadius: 4
+        hoverBackgroundColor: '#9C4221',
+        borderRadius: 4,
+        barPercentage: 0.65,
+        yAxisID: 'y',
+        order: 2
       },
       {
-        label: 'Chikungunya',
+        type: 'line',
+        label: 'Chikungunya (Eixo Direito)',
         data: valoresChik,
+        borderColor: '#805AD5',
         backgroundColor: '#805AD5',
-        borderRadius: 4
+        pointBackgroundColor: '#805AD5',
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+        tension: 0.2,
+        yAxisID: 'y1',
+        order: 1
       },
       {
-        label: 'Zika',
+        type: 'line',
+        label: 'Zika (Eixo Direito)',
         data: valoresZika,
+        borderColor: '#0B6B55',
         backgroundColor: '#0B6B55',
-        borderRadius: 4
+        pointBackgroundColor: '#0B6B55',
+        pointBorderColor: '#FFFFFF',
+        pointBorderWidth: 2,
+        pointRadius: 6,
+        pointHoverRadius: 8,
+        borderWidth: 2.5,
+        tension: 0.2,
+        yAxisID: 'y1',
+        order: 0
       }
     ];
   }
@@ -523,11 +554,12 @@ export function DengueChart({ rows = [] }) {
             const anoIndex = ctx.dataIndex;
             const ano = anosUnicos[anoIndex];
             const datasetLabel = ctx.dataset.label || 'Casos';
-            if (ano === 2024 && modo === 'dengue') {
+            const isParcial = rows.some(r => r.ano === ano && r.parcial);
+            if (ano === 2024 && datasetLabel.includes('Dengue')) {
               return ` ${datasetLabel}: ${formatNumber(val)} (Pico Epidêmico Histórico)`;
             }
-            if (ano === 2026) {
-              return ` ${datasetLabel}: ${formatNumber(val)} (Parcial até SE38)`;
+            if (isParcial) {
+              return ` ${datasetLabel}: ${formatNumber(val)} (Parcial${ano === 2026 ? ' até SE38' : ''})`;
             }
             return ` ${datasetLabel}: ${formatNumber(val)} notificações`;
           }
@@ -545,15 +577,41 @@ export function DengueChart({ rows = [] }) {
         grid: { color: AXIS_GRID_COLOR }
       },
       y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
         beginAtZero: true,
+        max: modo === 'todas' ? 18000 : undefined,
         title: {
           display: true,
-          text: modo === 'chikungunya' ? 'Notificações de Chikungunya' : 'Casos Notificados / Prováveis',
-          color: AXIS_LABEL_COLOR,
+          text: modo === 'chikungunya' 
+            ? 'Notificações de Chikungunya' 
+            : modo === 'todas'
+            ? 'Casos de Dengue (Eixo Esquerdo)'
+            : 'Casos Notificados / Prováveis',
+          color: modo === 'todas' ? '#C05621' : AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
         ticks: { callback: v => formatNumber(v) },
         grid: { color: AXIS_GRID_COLOR }
+      },
+      y1: {
+        type: 'linear',
+        display: modo === 'todas',
+        position: 'right',
+        beginAtZero: true,
+        suggestedMax: 45,
+        title: {
+          display: modo === 'todas',
+          text: 'Chikungunya e Zika (Eixo Direito)',
+          color: '#805AD5',
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { 
+          callback: v => formatNumber(v),
+          stepSize: 10
+        },
+        grid: { drawOnChartArea: false }
       }
     }
   };
@@ -564,9 +622,9 @@ export function DengueChart({ rows = [] }) {
         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
           {modo === 'dengue' && <span>Exibindo <strong>Série Histórica de Dengue</strong> (SINAN / InfoDengue)</span>}
           {modo === 'chikungunya' && <span>Exibindo <strong>Chikungunya</strong> em escala dedicada</span>}
-          {modo === 'todas' && <span>Comparativo simultâneo de <strong>Dengue, Chikungunya e Zika</strong></span>}
+          {modo === 'todas' && <span>Comparativo com <strong>Eixo Duplo</strong>: Dengue (escala à esquerda) vs. Chikungunya e Zika (escala à direita)</span>}
         </div>
-        <div className="segmented">
+        <div className="segmented" role="group" aria-label="Modo de visualização de arboviroses">
           <button 
             type="button" 
             aria-pressed={modo === 'dengue'} 
@@ -597,6 +655,12 @@ export function DengueChart({ rows = [] }) {
 
       <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--subtle)', border: '1px solid var(--border)', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
         <strong>Nota epidemiológica:</strong> Em <strong>2024</strong>, Unaí vivenciou o maior pico epidêmico de dengue da série histórica com <strong>16.687 notificações</strong> registradas. Os dados de <strong>2026*</strong> são parciais acumulados até a Semana Epidemiológica 38 (2.006 casos notificados de dengue).
+        {modo === 'chikungunya' && (
+          <span> No modo Chikungunya, as notificações são exibidas em escala vertical dedicada, permitindo o acompanhamento detalhado dos picos observados em 2024 (26 casos) e 2025 (39 casos).</span>
+        )}
+        {modo === 'todas' && (
+          <span> No modo comparativo, Dengue utiliza o eixo esquerdo (escala de 0 a 18.000 casos), enquanto Chikungunya e Zika utilizam o eixo direito em destaque (escala dedicada de 0 a 45 notificações), permitindo a leitura e comparação simultânea de todas as arboviroses sem invisibilidade.</span>
+        )}
       </div>
     </div>
   );
@@ -606,8 +670,9 @@ export function DengueChart({ rows = [] }) {
  * 6b. Notificações Consolidadas de Dengue no DATASUS / TabNet (Ministério da Saúde)
  */
 export function DengueDatasusChart({ rows = [] }) {
-  const anos = rows.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
-  const casos = rows.map(r => r.valor || 0);
+  const rowsValidas = rows.filter(r => r.ano);
+  const anos = rowsValidas.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
+  const casos = rowsValidas.map(r => r.valor || 0);
 
   const data = {
     labels: anos,
@@ -975,8 +1040,9 @@ export function CorRacaChart({ rows = [] }) {
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
-            return ` ${ctx.label}: ${formatNumber(ctx.parsed)} pessoas (${pct}%)`;
+            const val = ctx.parsed || 0;
+            const pct = total > 0 ? ((val / total) * 100).toFixed(1).replace('.', ',') : '0';
+            return ` ${ctx.label}: ${formatNumber(val)} pessoas (${pct}%)`;
           }
         }
       }
@@ -994,8 +1060,9 @@ export function CorRacaChart({ rows = [] }) {
  * 12. Evolução da População Estimada (IBGE 2015-2026)
  */
 export function PopulacaoEstimativasChart({ rows = [] }) {
-  const anos = rows.map(r => String(r.ano));
-  const valores = rows.map(r => r.valor || 0);
+  const rowsValidas = rows.filter(r => r.ano);
+  const anos = rowsValidas.map(r => String(r.ano));
+  const valores = rowsValidas.map(r => r.valor || 0);
 
   const data = {
     labels: anos,
@@ -1143,13 +1210,17 @@ export function ImunizacaoChart({ rows = [] }) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` Cobertura: ${ctx.parsed.x}% (Meta PNI: 95%)`
+          label: (ctx) => {
+            const val = ctx.parsed.x || 0;
+            const formatted = typeof val === 'number' ? val.toFixed(1).replace('.', ',') : val;
+            return ` Cobertura: ${formatted}% (Meta PNI: 95%)`;
+          }
         }
       }
     },
     scales: {
       x: {
-        max: 100,
+        suggestedMax: 100,
         beginAtZero: true,
         title: {
           display: true,
@@ -1157,7 +1228,7 @@ export function ImunizacaoChart({ rows = [] }) {
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
-        ticks: { callback: v => `${v}%` },
+        ticks: { callback: v => `${typeof v === 'number' ? String(v).replace('.', ',') : v}%` },
         grid: { color: AXIS_GRID_COLOR }
       },
       y: {
@@ -1183,7 +1254,7 @@ export function ImunizacaoChart({ rows = [] }) {
  * 15. Classificação C1 das Equipes eSF (Programa Mais Acesso)
  */
 export function ApsC1Chart({ rows = [] }) {
-  const quadrimestres = [...new Set(rows.map(r => r.quadrimestre || r.periodo))]
+  const quadrimestres = [...new Set(rows.map(r => r.quadrimestre || r.periodo).filter(Boolean))]
     .filter(q => rows.some(r => (r.quadrimestre === q || r.periodo === q) && r.valor !== null));
 
   const classes = ['Ótimo', 'Bom', 'Suficiente', 'Regular'];
@@ -1215,7 +1286,7 @@ export function ApsC1Chart({ rows = [] }) {
       legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y} equipes (${Math.round((ctx.parsed.y / 21) * 100)}%)`
+          label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)} equipes (${Math.round(((ctx.parsed.y || 0) / 21) * 100)}%)`
         }
       }
     },
@@ -1240,7 +1311,10 @@ export function ApsC1Chart({ rows = [] }) {
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
-        ticks: { stepSize: 5 },
+        ticks: { 
+          stepSize: 5,
+          callback: v => formatNumber(v)
+        },
         grid: { color: AXIS_GRID_COLOR }
       }
     }
@@ -1409,8 +1483,9 @@ export function RedeSusChart({ rows = [] }) {
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
-            return ` ${ctx.label}: ${formatNumber(ctx.parsed)} estabelecimentos (${pct}%)`;
+            const val = ctx.parsed || 0;
+            const pct = total > 0 ? ((val / total) * 100).toFixed(1).replace('.', ',') : '0';
+            return ` ${ctx.label}: ${formatNumber(val)} estabelecimentos (${pct}%)`;
           }
         }
       }
@@ -1574,7 +1649,9 @@ export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
         callbacks: {
           label: (ctx) => {
             if (ctx.dataset.yAxisID === 'y1') {
-              return ` ${ctx.dataset.label}: ${ctx.parsed.y} dias / internação`;
+              const val = ctx.parsed.y || 0;
+              const formatted = typeof val === 'number' ? val.toFixed(1).replace('.', ',') : val;
+              return ` ${ctx.dataset.label}: ${formatted} dias / internação`;
             }
             return ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)} dias`;
           }
@@ -1617,7 +1694,7 @@ export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
           color: '#C05621',
           font: { weight: '600', size: 12 }
         },
-        ticks: { callback: v => `${v} d` },
+        ticks: { callback: v => `${typeof v === 'number' ? String(v).replace('.', ',') : v} d` },
         grid: { drawOnChartArea: false }
       }
     }
@@ -1668,7 +1745,7 @@ export function SragChart({ rows = [] }) {
       legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${ctx.dataset.label}: ${ctx.parsed.y}`
+          label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)}`
         }
       }
     },
@@ -1690,7 +1767,10 @@ export function SragChart({ rows = [] }) {
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
-        ticks: { stepSize: 1 },
+        ticks: { 
+          stepSize: 1,
+          callback: v => formatNumber(v)
+        },
         grid: { color: AXIS_GRID_COLOR }
       }
     }

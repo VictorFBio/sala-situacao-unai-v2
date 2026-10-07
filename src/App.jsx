@@ -17,9 +17,14 @@ export default function App() {
     return !sessionStorage.getItem('unai_gate_intro_seen');
   });
 
+  const normalizeRoute = (hash) => {
+    if (!hash || hash === '#' || hash === '#/') return '#/';
+    return hash;
+  };
+
   // Roteamento SPA por Hash (compatível com GitHub Pages e servidor estático local)
   const [currentRoute, setCurrentRoute] = useState(() => {
-    return window.location.hash || '#/';
+    return normalizeRoute(window.location.hash);
   });
 
   const [portalData, setPortalData] = useState(null);
@@ -28,7 +33,7 @@ export default function App() {
   // Efeito de escuta de mudanças de hash (botões Voltar/Avançar do navegador)
   useEffect(() => {
     const handleHashChange = () => {
-      setCurrentRoute(window.location.hash || '#/');
+      setCurrentRoute(normalizeRoute(window.location.hash));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -47,8 +52,9 @@ export default function App() {
   }, []);
 
   const handleRouteChange = (newRoute) => {
-    window.location.hash = newRoute;
-    setCurrentRoute(newRoute);
+    const target = normalizeRoute(newRoute);
+    window.location.hash = target;
+    setCurrentRoute(target);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
