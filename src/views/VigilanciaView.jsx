@@ -21,6 +21,7 @@ import {
   SimIdadeChart, 
   ObitosAnuaisChart, 
   DengueChart, 
+  DengueDatasusChart, 
   SragChart, 
   ImunizacaoChart 
 } from '../components/NativeCharts';
@@ -36,6 +37,7 @@ export default function VigilanciaView({ data, onRouteChange }) {
   const qCausas = queries.sim_causas;
   const qIdade = queries.sim_idade;
   const qDengue = queries.arboviroses_anual;
+  const qDengueDatasus = queries.dengue_datasus;
   const qSrag = queries.srag_sivep;
   const qImunizacao = queries.imunizacao_2025;
 
@@ -158,17 +160,32 @@ export default function VigilanciaView({ data, onRouteChange }) {
         </div>
       </TabPanel>
 
-      {/* Aba 3: Arboviroses (Dengue) */}
+      {/* Aba 3: Arboviroses (Dengue, Chikungunya e Zika) */}
       <TabPanel id="arboviroses" value={activeTab} baseLabel="Arboviroses">
-        <div className="panel-grid single">
+        <div className="panel-grid single" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           <ChartCard
-            title="Casos Notificados de Dengue (Série Anual)"
-            description="Casos prováveis e confirmados de dengue registrados no SINAN e InfoDengue em Unaí."
+            title="Casos Notificados de Dengue & Arboviroses (InfoDengue / SINAN)"
+            description="Série histórica harmonizada pela Fiocruz/FGV com base nas notificações registradas no SINAN para Unaí (2021–2026)."
             query={qDengue}
             queryId="arboviroses_anual"
           >
             <DengueChart rows={qDengue?.rows || []} />
           </ChartCard>
+
+          <ChartCard
+            title="Casos Prováveis Consolidados de Dengue (DATASUS / TabNet / MS)"
+            description="Casos prováveis consolidados por ano do primeiro sintoma segundo o Ministério da Saúde (excluídos casos descartados)."
+            query={qDengueDatasus}
+            queryId="dengue_datasus"
+          >
+            <DengueDatasusChart rows={qDengueDatasus?.rows || []} />
+          </ChartCard>
+
+          <Note title="Aspectos Epidemiológicos das Arboviroses em Unaí">
+            <p>
+              O município de Unaí enfrentou em <strong>2024</strong> o maior evento epidêmico de dengue de sua história, com 16.687 notificações registradas pelo sistema InfoDengue/SINAN e 7.452 casos prováveis consolidados no DATASUS. A diferença entre as fontes decorre do critério metodológico: o InfoDengue acompanha o fluxo contínuo de notificações semanais da vigilância sentinela, enquanto o TabNet/DATASUS consolida as fichas após investigação epidemiológica e descarte de casos negativos.
+            </p>
+          </Note>
         </div>
       </TabPanel>
 

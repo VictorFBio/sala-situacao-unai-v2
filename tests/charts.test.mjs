@@ -129,3 +129,37 @@ test('12. Testes funcionais de ordenação cronológica e agregação de dados',
   assert.strictEqual(topCausas[0].categoria, 'IX. Doenças do aparelho circulatório');
   assert.strictEqual(topCausas[0].valor, 1204);
 });
+
+test('13. Validação do gráfico de Dengue e Arboviroses (DengueChart e DengueDatasusChart)', () => {
+  const chartsPath = path.join(projectRoot, 'src', 'components', 'NativeCharts.jsx');
+  const content = fs.readFileSync(chartsPath, 'utf8');
+
+  // DengueChart
+  const dengueMatch = content.match(/export function DengueChart[\s\S]*?return \([\s\S]*?<\/div>\s*\);/);
+  assert.ok(dengueMatch, 'DengueChart deve existir');
+  const dengueCode = dengueMatch[0];
+
+  assert.ok(dengueCode.includes('anosUnicos'), 'DengueChart deve agrupar anos únicos para não duplicar rótulos no eixo X');
+  assert.ok(dengueCode.includes('soma_observada'), 'DengueChart deve utilizar soma_observada para anos parciais (ex: 2026)');
+  assert.ok(dengueCode.includes('modo'), 'DengueChart deve permitir alternância de visualização (Dengue, Chikungunya, Todas)');
+
+  // DengueDatasusChart
+  const datasusMatch = content.match(/export function DengueDatasusChart[\s\S]*?return \([\s\S]*?<\/div>\s*\);/);
+  assert.ok(datasusMatch, 'DengueDatasusChart deve existir para exibir série consolidada do Ministério da Saúde');
+
+  // Teste de integridade dos dados reais de arboviroses
+  const dataPath = path.join(projectRoot, 'public', 'data', 'dashboard-data.json');
+  const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+  const rows = d.queries.arboviroses_anual.rows;
+
+  const dengueRows = rows.filter(r => r.agravo === 'dengue');
+  assert.strictEqual(dengueRows.length, 6, 'Devem existir 6 anos de dados de dengue (2021-2026)');
+
+  // Verificar pico de 2024
+  const row2024 = dengueRows.find(r => r.ano === 2024);
+  assert.strictEqual(row2024.valor, 16687, 'Ano de 2024 deve ter 16.687 notificações');
+
+  // Verificar ano parcial de 2026
+  const row2026 = dengueRows.find(r => r.ano === 2026);
+  assert.strictEqual(row2026.soma_observada, 2006, 'Ano de 2026 deve ter soma_observada de 2.006');
+});

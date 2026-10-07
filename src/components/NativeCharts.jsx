@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -434,29 +434,103 @@ export function SimIdadeChart({ rows = [] }) {
  * 6. Notificações de Dengue / Arboviroses (InfoDengue / SINAN)
  */
 export function DengueChart({ rows = [] }) {
-  const anos = rows.map(r => String(r.ano || r.periodo || ''));
-  const casos = rows.map(r => r.casos || r.valor || 0);
+  const [modo, setModo] = useState('dengue'); // 'dengue' | 'chikungunya' | 'todas'
 
-  const data = {
-    labels: anos,
-    datasets: [
+  // Identificar anos únicos e ordenados
+  const anosUnicos = [...new Set(rows.map(r => r.ano).filter(Boolean))].sort((a, b) => a - b);
+  
+  // Rótulos limpos para o eixo X (sem repetição de anos)
+  const labels = anosUnicos.map(ano => {
+    const isParcial = rows.some(r => r.ano === ano && r.parcial);
+    return isParcial ? `${ano}* (parcial)` : String(ano);
+  });
+
+  // Função auxiliar para recuperar o valor por agravo e ano
+  const getValor = (ano, agravoNome) => {
+    const item = rows.find(r => r.ano === ano && (r.agravo || '').toLowerCase() === agravoNome);
+    if (!item) return 0;
+    if (item.valor !== null && item.valor !== undefined) return Number(item.valor);
+    if (item.soma_observada !== null && item.soma_observada !== undefined) return Number(item.soma_observada);
+    return 0;
+  };
+
+  const valoresDengue = anosUnicos.map(ano => getValor(ano, 'dengue'));
+  const valoresChik = anosUnicos.map(ano => getValor(ano, 'chikungunya'));
+  const valoresZika = anosUnicos.map(ano => getValor(ano, 'zika'));
+
+  let datasets = [];
+
+  if (modo === 'dengue') {
+    datasets = [
       {
-        label: 'Casos Notificados / Prováveis de Dengue',
-        data: casos,
+        label: 'Casos Notificados de Dengue',
+        data: valoresDengue,
+        backgroundColor: anosUnicos.map(ano => ano === 2024 ? '#9C4221' : '#C05621'),
+        hoverBackgroundColor: '#7B341E',
+        borderRadius: 4,
+        barPercentage: 0.65
+      }
+    ];
+  } else if (modo === 'chikungunya') {
+    datasets = [
+      {
+        label: 'Casos Notificados de Chikungunya',
+        data: valoresChik,
+        backgroundColor: '#805AD5',
+        hoverBackgroundColor: '#6B46C1',
+        borderRadius: 4,
+        barPercentage: 0.65
+      }
+    ];
+  } else {
+    // Modo comparativo com as 3 arboviroses
+    datasets = [
+      {
+        label: 'Dengue',
+        data: valoresDengue,
         backgroundColor: '#C05621',
         borderRadius: 4
+      },
+      {
+        label: 'Chikungunya',
+        data: valoresChik,
+        backgroundColor: '#805AD5',
+        borderRadius: 4
+      },
+      {
+        label: 'Zika',
+        data: valoresZika,
+        backgroundColor: '#0B6B55',
+        borderRadius: 4
       }
-    ]
-  };
+    ];
+  }
+
+  const data = { labels, datasets };
 
   const options = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' },
+      legend: { 
+        display: modo === 'todas',
+        position: 'top' 
+      },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} casos notificados`
+          label: (ctx) => {
+            const val = ctx.parsed.y;
+            const anoIndex = ctx.dataIndex;
+            const ano = anosUnicos[anoIndex];
+            const datasetLabel = ctx.dataset.label || 'Casos';
+            if (ano === 2024 && modo === 'dengue') {
+              return ` ${datasetLabel}: ${formatNumber(val)} (Pico Epidêmico Histórico)`;
+            }
+            if (ano === 2026) {
+              return ` ${datasetLabel}: ${formatNumber(val)} (Parcial até SE38)`;
+            }
+            return ` ${datasetLabel}: ${formatNumber(val)} notificações`;
+          }
         }
       }
     },
@@ -474,7 +548,105 @@ export function DengueChart({ rows = [] }) {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Casos Notificados / Prováveis',
+          text: modo === 'chikungunya' ? 'Notificações de Chikungunya' : 'Casos Notificados / Prováveis',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
+    }
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          {modo === 'dengue' && <span>Exibindo <strong>Série Histórica de Dengue</strong> (SINAN / InfoDengue)</span>}
+          {modo === 'chikungunya' && <span>Exibindo <strong>Chikungunya</strong> em escala dedicada</span>}
+          {modo === 'todas' && <span>Comparativo simultâneo de <strong>Dengue, Chikungunya e Zika</strong></span>}
+        </div>
+        <div className="segmented">
+          <button 
+            type="button" 
+            aria-pressed={modo === 'dengue'} 
+            onClick={() => setModo('dengue')}
+          >
+            Dengue
+          </button>
+          <button 
+            type="button" 
+            aria-pressed={modo === 'chikungunya'} 
+            onClick={() => setModo('chikungunya')}
+          >
+            Chikungunya
+          </button>
+          <button 
+            type="button" 
+            aria-pressed={modo === 'todas'} 
+            onClick={() => setModo('todas')}
+          >
+            Todas as Arboviroses
+          </button>
+        </div>
+      </div>
+
+      <div style={{ height: '320px', width: '100%' }}>
+        <Bar data={data} options={options} />
+      </div>
+
+      <div style={{ marginTop: '12px', padding: '10px 14px', background: 'var(--subtle)', border: '1px solid var(--border)', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+        <strong>Nota epidemiológica:</strong> Em <strong>2024</strong>, Unaí vivenciou o maior pico epidêmico de dengue da série histórica com <strong>16.687 notificações</strong> registradas. Os dados de <strong>2026*</strong> são parciais acumulados até a Semana Epidemiológica 38 (2.006 casos notificados de dengue).
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 6b. Notificações Consolidadas de Dengue no DATASUS / TabNet (Ministério da Saúde)
+ */
+export function DengueDatasusChart({ rows = [] }) {
+  const anos = rows.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
+  const casos = rows.map(r => r.valor || 0);
+
+  const data = {
+    labels: anos,
+    datasets: [
+      {
+        label: 'Casos Prováveis Consolidados (DATASUS/TabNet)',
+        data: casos,
+        backgroundColor: '#DD6B20',
+        borderRadius: 4
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} casos prováveis no TabNet`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Ano do 1º Sintoma',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Casos Prováveis (excluídos descartados)',
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
