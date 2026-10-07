@@ -17,7 +17,8 @@ import {
 } from '../components/ui';
 import { 
   PiramideEtariaChart, 
-  CorRacaChart 
+  CorRacaChart, 
+  PopulacaoEstimativasChart 
 } from '../components/NativeCharts';
 import { formatNumber, findIndicator } from '../utils/data-loader';
 
@@ -32,12 +33,14 @@ export default function GestaoView({ data, onRouteChange }) {
   const popIdoso = findIndicator(resumo, 'I03');
 
   const qFaixas = queries.populacao_idade_sexo;
+  const qEstimativas = queries.populacao_estimativas;
   const qCorRaca = queries.populacao_cor_raca;
   const qEsgoto = queries.saneamento_esgoto;
   const qLixo = queries.saneamento_lixo;
   const qCenso = queries.territorio_censo;
 
   const faixasRows = qFaixas?.rows || [];
+  const estimativasRows = qEstimativas?.rows || [];
   const corRacaRows = (qCorRaca?.rows || []).filter(r => r.ano === 2022);
   const esgotoRows = qEsgoto?.rows || [];
   const lixoRows = qLixo?.rows || [];
@@ -103,9 +106,9 @@ export default function GestaoView({ data, onRouteChange }) {
         label="Eixos Demográficos e Territoriais"
       />
 
-      {/* Aba 1: Pirâmide Etária */}
-      <TabPanel id="piramide" value={activeTab} baseLabel="Pirâmide Etária">
-        <div className="panel-grid single">
+      {/* Aba 1: Pirâmide Etária & Projeções */}
+      <TabPanel id="piramide" value={activeTab} baseLabel="Pirâmide Etária e Demografia">
+        <div className="panel-grid single" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <ChartCard
             title="Pirâmide Etária da População de Unaí (Censo Demográfico 2022)"
             description="Distribuição percentual e absoluta de homens e mulheres por faixas quinquenais de idade."
@@ -113,6 +116,15 @@ export default function GestaoView({ data, onRouteChange }) {
             queryId="populacao_idade_sexo"
           >
             <PiramideEtariaChart rows={faixasRows} />
+          </ChartCard>
+
+          <ChartCard
+            title="Série Histórica e Estimativas Populacionais de Unaí (IBGE 2015–2026)"
+            description="Projeções intercensitárias e contagens da população residente do município de Unaí publicadas pelo IBGE."
+            query={qEstimativas}
+            queryId="populacao_estimativas"
+          >
+            <PopulacaoEstimativasChart rows={estimativasRows} />
           </ChartCard>
         </div>
       </TabPanel>

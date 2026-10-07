@@ -13,7 +13,7 @@ import {
   Filler
 } from 'chart.js';
 import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
-import { formatNumber, formatCurrency } from '../utils/data-loader';
+import { formatNumber, formatCurrency, formatCompetencia } from '../utils/data-loader';
 
 ChartJS.register(
   CategoryScale,
@@ -27,6 +27,9 @@ ChartJS.register(
   Legend,
   Filler
 );
+
+const AXIS_LABEL_COLOR = '#334155';
+const AXIS_GRID_COLOR = 'rgba(226, 232, 240, 0.8)';
 
 /**
  * 1. Série Temporal de Nascimentos (SINASC 2015-2026)
@@ -61,12 +64,31 @@ export function NascimentosChart({ rows = [] }) {
       tooltip: {
         callbacks: {
           label: (ctx) => ` ${formatNumber(ctx.parsed.y)} nascimentos`,
-          footer: () => 'Fonte: SINASC / DATASUS e Sede Municipal'
+          footer: () => 'Fonte: SINASC / DATASUS e Sede Municipal de Unaí'
         }
       }
     },
     scales: {
-      y: { beginAtZero: false, ticks: { callback: v => formatNumber(v) } }
+      x: {
+        title: {
+          display: true,
+          text: 'Ano de Nascimento',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Nascidos Vivos (registros anuais)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -78,12 +100,78 @@ export function NascimentosChart({ rows = [] }) {
 }
 
 /**
- * 2. Consultas Pré-Natal (SINASC)
+ * 2. Série Temporal de Óbitos Anuais (SIM 2015-2026)
+ */
+export function ObitosAnuaisChart({ rows = [] }) {
+  const anosValidos = rows.filter(r => r.ano && r.valor !== null);
+  const labels = anosValidos.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
+  const valores = anosValidos.map(r => r.valor);
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: 'Óbitos Registrados (SIM)',
+        data: valores,
+        borderColor: '#A85A1D',
+        backgroundColor: 'rgba(168, 90, 29, 0.12)',
+        fill: true,
+        tension: 0.35,
+        pointBackgroundColor: '#A85A1D',
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} óbitos`,
+          footer: () => 'Fonte: SIM / DATASUS e Sede Municipal de Unaí'
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Ano do Óbito',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Total de Óbitos (registros anuais)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
+    }
+  };
+
+  return (
+    <div style={{ height: '320px', width: '100%' }}>
+      <Line data={data} options={options} />
+    </div>
+  );
+}
+
+/**
+ * 3. Consultas Pré-Natal (SINASC)
  */
 export function SinascPrenatalChart({ rows = [] }) {
-  // Pegar os dados mais recentes agrupados por categoria
-  const categorias = [...new Set(rows.map(r => r.categoria || r.consultas))].filter(Boolean);
-  const anos = [...new Set(rows.map(r => r.ano))].sort().slice(-5); // últimos 5 anos
+  const anos = [...new Set(rows.map(r => r.ano))].sort().slice(-6);
 
   const datasets = [
     {
@@ -121,32 +209,57 @@ export function SinascPrenatalChart({ rows = [] }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' }
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)} nascimentos`
+        }
+      }
     },
     scales: {
-      x: { stacked: true },
-      y: { stacked: true, beginAtZero: true }
+      x: {
+        stacked: true,
+        title: {
+          display: true,
+          text: 'Ano',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Nascidos Vivos por Faixa de Pré-Natal',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
   return (
-    <div style={{ height: '300px', width: '100%' }}>
+    <div style={{ height: '320px', width: '100%' }}>
       <Bar data={data} options={options} />
     </div>
   );
 }
 
 /**
- * 3. Mortalidade por Causas Básicas (SIM)
+ * 4. Mortalidade por Causas Básicas (SIM)
  */
 export function CausasMorteChart({ rows = [] }) {
-  // Ordenar as maiores causas
   const causasTop = [...rows]
     .sort((a, b) => (b.valor || 0) - (a.valor || 0))
     .slice(0, 6);
 
   const labels = causasTop.map(r => r.categoria || r.causa || 'Outras');
   const valores = causasTop.map(r => r.valor || 0);
+  const total = valores.reduce((a, b) => a + b, 0);
 
   const data = {
     labels,
@@ -175,7 +288,10 @@ export function CausasMorteChart({ rows = [] }) {
       legend: { position: 'right' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${ctx.label}: ${formatNumber(ctx.parsed)} óbitos`
+          label: (ctx) => {
+            const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
+            return ` ${ctx.label}: ${formatNumber(ctx.parsed)} óbitos (${pct}%)`;
+          }
         }
       }
     }
@@ -189,10 +305,10 @@ export function CausasMorteChart({ rows = [] }) {
 }
 
 /**
- * 4. Óbitos por Faixa Etária (SIM)
+ * 5. Óbitos por Faixa Etária (SIM)
  */
 export function SimIdadeChart({ rows = [] }) {
-  const faixas = [...rows].filter(r => r.faixa && r.valor !== null);
+  const faixas = [...rows].filter(r => (r.faixa || r.categoria) && r.valor !== null);
   const labels = faixas.map(r => r.faixa || r.categoria);
   const valores = faixas.map(r => r.valor || 0);
 
@@ -212,8 +328,35 @@ export function SimIdadeChart({ rows = [] }) {
     indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${formatNumber(ctx.parsed.x)} óbitos`
+        }
+      }
+    },
     scales: {
-      x: { beginAtZero: true }
+      x: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Total de Óbitos Registrados (SIM)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Faixa Etária',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { display: false }
+      }
     }
   };
 
@@ -225,7 +368,7 @@ export function SimIdadeChart({ rows = [] }) {
 }
 
 /**
- * 5. Notificações de Dengue / Arboviroses (InfoDengue / SINAN)
+ * 6. Notificações de Dengue / Arboviroses (InfoDengue / SINAN)
  */
 export function DengueChart({ rows = [] }) {
   const anos = rows.map(r => String(r.ano || r.periodo || ''));
@@ -238,7 +381,7 @@ export function DengueChart({ rows = [] }) {
         label: 'Casos Notificados / Prováveis de Dengue',
         data: casos,
         backgroundColor: '#C05621',
-        borderRadius: 6
+        borderRadius: 4
       }
     ]
   };
@@ -250,12 +393,31 @@ export function DengueChart({ rows = [] }) {
       legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} casos`
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} casos notificados`
         }
       }
     },
     scales: {
-      y: { beginAtZero: true }
+      x: {
+        title: {
+          display: true,
+          text: 'Ano Epidemiológico',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Casos Notificados / Prováveis',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -267,18 +429,18 @@ export function DengueChart({ rows = [] }) {
 }
 
 /**
- * 6. Atendimentos Mensais da Atenção Primária (Siaps / APS)
+ * 7. Atendimentos Mensais da Atenção Primária (Siaps / APS)
  */
 export function ApsAtendimentosChart({ rows = [] }) {
   const ultimos = rows.slice(-24);
-  const labels = ultimos.map(r => r.competencia || r.mes || r.data || '');
+  const labels = ultimos.map(r => formatCompetencia(r.competencia || r.mes || r.data));
   const valores = ultimos.map(r => r.valor || 0);
 
   const data = {
     labels,
     datasets: [
       {
-        label: 'Atendimentos Individuais (Consultas Médicas e de Enfermagem)',
+        label: 'Atendimentos Individuais (Médicos e Enfermagem)',
         data: valores,
         borderColor: '#0B6B55',
         backgroundColor: 'rgba(11, 107, 85, 0.12)',
@@ -294,14 +456,34 @@ export function ApsAtendimentosChart({ rows = [] }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} atendimentos`
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} atendimentos individuais`
         }
       }
     },
     scales: {
-      y: { beginAtZero: false, ticks: { callback: v => formatNumber(v) } }
+      x: {
+        title: {
+          display: true,
+          text: 'Competência (Mês/Ano)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Atendimentos Individuais Registrados',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -313,11 +495,11 @@ export function ApsAtendimentosChart({ rows = [] }) {
 }
 
 /**
- * 7. Visitas Domiciliares de ACS (Siaps / APS)
+ * 8. Visitas Domiciliares de ACS (Siaps / APS)
  */
 export function ApsVisitasChart({ rows = [] }) {
   const ultimos = rows.slice(-24);
-  const labels = ultimos.map(r => r.competencia || r.mes || r.data || '');
+  const labels = ultimos.map(r => formatCompetencia(r.competencia || r.mes || r.data));
   const valores = ultimos.map(r => r.valor || 0);
 
   const data = {
@@ -340,6 +522,7 @@ export function ApsVisitasChart({ rows = [] }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: { position: 'top' },
       tooltip: {
         callbacks: {
           label: (ctx) => ` ${formatNumber(ctx.parsed.y)} visitas domiciliares`
@@ -347,7 +530,26 @@ export function ApsVisitasChart({ rows = [] }) {
       }
     },
     scales: {
-      y: { beginAtZero: false, ticks: { callback: v => formatNumber(v) } }
+      x: {
+        title: {
+          display: true,
+          text: 'Competência (Mês/Ano)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Visitas Domiciliares Registradas',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -359,7 +561,69 @@ export function ApsVisitasChart({ rows = [] }) {
 }
 
 /**
- * 8. Pirâmide Etária por Sexo (Censo 2022)
+ * 9. Atividades Coletivas na APS (Siaps)
+ */
+export function ApsColetivasChart({ rows = [] }) {
+  const ultimos = rows.slice(-24);
+  const labels = ultimos.map(r => formatCompetencia(r.competencia || r.mes || r.data));
+  const valores = ultimos.map(r => r.valor || 0);
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: 'Atividades Coletivas de Promoção da Saúde',
+        data: valores,
+        backgroundColor: '#6B46C1',
+        borderRadius: 4
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} atividades coletivas`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Competência (Mês/Ano)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Atividades Coletivas Realizadas',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
+    }
+  };
+
+  return (
+    <div style={{ height: '280px', width: '100%' }}>
+      <Bar data={data} options={options} />
+    </div>
+  );
+}
+
+/**
+ * 10. Pirâmide Etária por Sexo (Censo 2022)
  */
 export function PiramideEtariaChart({ rows = [] }) {
   const faixas = [...new Set(rows.map(r => r.faixa || r.categoria))].filter(Boolean);
@@ -379,7 +643,7 @@ export function PiramideEtariaChart({ rows = [] }) {
     datasets: [
       {
         label: 'Homens',
-        data: homens.map(v => -v), // valor negativo para o lado esquerdo da pirâmide
+        data: homens.map(v => -v),
         backgroundColor: '#08588E',
         borderRadius: 4
       },
@@ -397,6 +661,7 @@ export function PiramideEtariaChart({ rows = [] }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: { position: 'top' },
       tooltip: {
         callbacks: {
           label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(Math.abs(ctx.parsed.x))} pessoas`
@@ -405,9 +670,25 @@ export function PiramideEtariaChart({ rows = [] }) {
     },
     scales: {
       x: {
+        title: {
+          display: true,
+          text: 'População Residente (Homens à esquerda / Mulheres à direita)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
         ticks: {
           callback: v => formatNumber(Math.abs(v))
-        }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Grupo Etário (Censo 2022)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { display: false }
       }
     }
   };
@@ -420,11 +701,12 @@ export function PiramideEtariaChart({ rows = [] }) {
 }
 
 /**
- * 9. População por Cor / Raça (Censo 2022)
+ * 11. População por Cor / Raça (Censo 2022)
  */
 export function CorRacaChart({ rows = [] }) {
   const labels = rows.map(r => r.cor || r.categoria);
   const valores = rows.map(r => r.valor || 0);
+  const total = valores.reduce((a, b) => a + b, 0);
 
   const data = {
     labels,
@@ -445,7 +727,10 @@ export function CorRacaChart({ rows = [] }) {
       legend: { position: 'right' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${ctx.label}: ${formatNumber(ctx.parsed)} pessoas`
+          label: (ctx) => {
+            const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
+            return ` ${ctx.label}: ${formatNumber(ctx.parsed)} pessoas (${pct}%)`;
+          }
         }
       }
     }
@@ -459,7 +744,72 @@ export function CorRacaChart({ rows = [] }) {
 }
 
 /**
- * 10. Internações Hospitalares por Especialidade (SIH/SUS)
+ * 12. Evolução da População Estimada (IBGE 2015-2026)
+ */
+export function PopulacaoEstimativasChart({ rows = [] }) {
+  const anos = rows.map(r => String(r.ano));
+  const valores = rows.map(r => r.valor || 0);
+
+  const data = {
+    labels: anos,
+    datasets: [
+      {
+        label: 'População Estimada (IBGE)',
+        data: valores,
+        borderColor: '#08588E',
+        backgroundColor: 'rgba(8, 88, 142, 0.12)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: '#08588E',
+        pointRadius: 5
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} habitantes`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Ano da Estimativa',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Habitantes Estimados (IBGE)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
+    }
+  };
+
+  return (
+    <div style={{ height: '300px', width: '100%' }}>
+      <Line data={data} options={options} />
+    </div>
+  );
+}
+
+/**
+ * 13. Internações Hospitalares por Especialidade (SIH/SUS)
  */
 export function InternacoesEspecialidadeChart({ rows = [] }) {
   const labels = rows.map(r => r.especialidade || r.categoria || '');
@@ -472,7 +822,7 @@ export function InternacoesEspecialidadeChart({ rows = [] }) {
         label: 'Internações Hospitalares no SUS',
         data: valores,
         backgroundColor: '#08588E',
-        borderRadius: 6
+        borderRadius: 4
       }
     ]
   };
@@ -489,7 +839,26 @@ export function InternacoesEspecialidadeChart({ rows = [] }) {
       }
     },
     scales: {
-      y: { beginAtZero: true }
+      x: {
+        title: {
+          display: true,
+          text: 'Especialidade de Internação',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Internações Aprovadas (AIH)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -501,7 +870,7 @@ export function InternacoesEspecialidadeChart({ rows = [] }) {
 }
 
 /**
- * 11. Cobertura Vacinal (Imunização SES-MG)
+ * 14. Cobertura Vacinal (Imunização SES-MG 2025)
  */
 export function ImunizacaoChart({ rows = [] }) {
   const labels = rows.map(r => r.vacina || r.imunobiologico || r.categoria || '');
@@ -527,12 +896,32 @@ export function ImunizacaoChart({ rows = [] }) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` Cobertura: ${ctx.parsed.x}% (Meta: 95%)`
+          label: (ctx) => ` Cobertura: ${ctx.parsed.x}% (Meta PNI: 95%)`
         }
       }
     },
     scales: {
-      x: { max: 100, beginAtZero: true, ticks: { callback: v => `${v}%` } }
+      x: {
+        max: 100,
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Cobertura Vacinal (%) — Meta PNI: 95%',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => `${v}%` },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Imunobiológico / Vacina',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { display: false }
+      }
     }
   };
 
@@ -544,10 +933,9 @@ export function ImunizacaoChart({ rows = [] }) {
 }
 
 /**
- * 12. Classificação C1 das Equipes eSF (Programa Mais Acesso)
+ * 15. Classificação C1 das Equipes eSF (Programa Mais Acesso)
  */
 export function ApsC1Chart({ rows = [] }) {
-  // Filtrar quadrimestres com dados válidos
   const quadrimestres = [...new Set(rows.map(r => r.quadrimestre || r.periodo))]
     .filter(q => rows.some(r => (r.quadrimestre === q || r.periodo === q) && r.valor !== null));
 
@@ -585,8 +973,29 @@ export function ApsC1Chart({ rows = [] }) {
       }
     },
     scales: {
-      x: { stacked: true },
-      y: { stacked: true, max: 22, beginAtZero: true, ticks: { stepSize: 5 } }
+      x: {
+        stacked: true,
+        title: {
+          display: true,
+          text: 'Quadrimestre de Avaliação (Siaps/MS)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        stacked: true,
+        max: 22,
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Equipes de Saúde da Família (Total: 21)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { stepSize: 5 },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -598,11 +1007,11 @@ export function ApsC1Chart({ rows = [] }) {
 }
 
 /**
- * 13. Atendimentos Odontológicos na APS (Siaps)
+ * 16. Atendimentos Odontológicos na APS (Siaps)
  */
 export function ApsOdontoChart({ rows = [] }) {
   const ultimos = rows.slice(-24);
-  const labels = ultimos.map(r => r.competencia || r.mes || r.data || '');
+  const labels = ultimos.map(r => formatCompetencia(r.competencia || r.mes || r.data));
   const valores = ultimos.map(r => r.valor || 0);
 
   const data = {
@@ -625,6 +1034,7 @@ export function ApsOdontoChart({ rows = [] }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: { position: 'top' },
       tooltip: {
         callbacks: {
           label: (ctx) => ` ${formatNumber(ctx.parsed.y)} atendimentos odontológicos`
@@ -632,7 +1042,26 @@ export function ApsOdontoChart({ rows = [] }) {
       }
     },
     scales: {
-      y: { beginAtZero: false, ticks: { callback: v => formatNumber(v) } }
+      x: {
+        title: {
+          display: true,
+          text: 'Competência (Mês/Ano)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Atendimentos Odontológicos',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -644,11 +1073,11 @@ export function ApsOdontoChart({ rows = [] }) {
 }
 
 /**
- * 14. Procedimentos Ambulatoriais na APS (Siaps)
+ * 17. Procedimentos Ambulatoriais na APS (Siaps)
  */
 export function ApsProcedimentosChart({ rows = [] }) {
   const ultimos = rows.slice(-24);
-  const labels = ultimos.map(r => r.competencia || r.mes || r.data || '');
+  const labels = ultimos.map(r => formatCompetencia(r.competencia || r.mes || r.data));
   const valores = ultimos.map(r => r.valor || 0);
 
   const data = {
@@ -667,6 +1096,7 @@ export function ApsProcedimentosChart({ rows = [] }) {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
+      legend: { position: 'top' },
       tooltip: {
         callbacks: {
           label: (ctx) => ` ${formatNumber(ctx.parsed.y)} procedimentos`
@@ -674,7 +1104,26 @@ export function ApsProcedimentosChart({ rows = [] }) {
       }
     },
     scales: {
-      y: { beginAtZero: false, ticks: { callback: v => formatNumber(v) } }
+      x: {
+        title: {
+          display: true,
+          text: 'Competência (Mês/Ano)',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: false,
+        title: {
+          display: true,
+          text: 'Procedimentos Registrados',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -686,11 +1135,12 @@ export function ApsProcedimentosChart({ rows = [] }) {
 }
 
 /**
- * 15. Distribuição de Estabelecimentos por Vínculo SUS (CNES)
+ * 18. Distribuição de Estabelecimentos por Vínculo SUS (CNES)
  */
 export function RedeSusChart({ rows = [] }) {
   const labels = rows.map(r => r.categoria === 'SIM' ? 'Atendimento SUS' : 'Não Atende SUS (Privado Puro)');
   const valores = rows.map(r => r.valor || 0);
+  const total = valores.reduce((a, b) => a + b, 0);
 
   const data = {
     labels,
@@ -712,8 +1162,7 @@ export function RedeSusChart({ rows = [] }) {
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const total = valores.reduce((a, b) => a + b, 0);
-            const pct = Math.round((ctx.parsed / total) * 100);
+            const pct = total > 0 ? Math.round((ctx.parsed / total) * 100) : 0;
             return ` ${ctx.label}: ${formatNumber(ctx.parsed)} estabelecimentos (${pct}%)`;
           }
         }
@@ -729,20 +1178,36 @@ export function RedeSusChart({ rows = [] }) {
 }
 
 /**
- * 16. Evolução das Internações Hospitalares e Custos (SIH/SUS)
+ * 19. Evolução das Internações Hospitalares e Custos (SIH/SUS - Eixo Duplo)
  */
 export function SihEvolucaoChart({ rowsInternacoes = [], rowsValores = [] }) {
-  const anos = rowsInternacoes.map(r => String(r.ano));
-  const internacoes = rowsInternacoes.map(r => r.valor || 0);
+  const anosValidos = rowsInternacoes.filter(r => r.ano);
+  const anos = anosValidos.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
+  const internacoes = anosValidos.map(r => r.valor || 0);
+
+  const mapaValores = new Map(rowsValores.map(r => [r.ano, r.valor]));
+  const valoresReais = anosValidos.map(r => mapaValores.get(r.ano) || 0);
 
   const data = {
     labels: anos,
     datasets: [
       {
-        label: 'Internações Hospitalares Aprovadas (AIH)',
+        type: 'bar',
+        label: 'Internações Aprovadas (AIH)',
         data: internacoes,
         backgroundColor: '#08588E',
-        borderRadius: 4
+        borderRadius: 4,
+        yAxisID: 'y'
+      },
+      {
+        type: 'line',
+        label: 'Valor Total Aprovado (R$)',
+        data: valoresReais,
+        borderColor: '#0B6B55',
+        backgroundColor: '#0B6B55',
+        pointRadius: 4,
+        tension: 0.3,
+        yAxisID: 'y1'
       }
     ]
   };
@@ -754,24 +1219,168 @@ export function SihEvolucaoChart({ rowsInternacoes = [], rowsValores = [] }) {
       legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} internações no ano`
+          label: (ctx) => {
+            if (ctx.dataset.yAxisID === 'y1') {
+              return ` ${ctx.dataset.label}: ${formatCurrency(ctx.parsed.y)}`;
+            }
+            return ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)} internações`;
+          }
         }
       }
     },
     scales: {
-      y: { beginAtZero: false, ticks: { callback: v => formatNumber(v) } }
+      x: {
+        title: {
+          display: true,
+          text: 'Ano',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Internações Aprovadas (AIH)',
+          color: '#08588E',
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Valor Aprovado (R$)',
+          color: '#0B6B55',
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => `${formatNumber(v / 1000000, { maximumFractionDigits: 1 })}M` },
+        grid: { drawOnChartArea: false }
+      }
     }
   };
 
   return (
-    <div style={{ height: '300px', width: '100%' }}>
+    <div style={{ height: '320px', width: '100%' }}>
       <Bar data={data} options={options} />
     </div>
   );
 }
 
 /**
- * 17. Monitoramento de SRAG (SIVEP-Gripe)
+ * 20. Dias de Internação e Permanência Hospitalar (SIH/SUS)
+ */
+export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
+  const anosValidos = rowsDias.filter(r => r.ano);
+  const labels = anosValidos.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
+  const dias = anosValidos.map(r => r.valor || 0);
+
+  const mapaInternacoes = new Map(rowsInternacoes.map(r => [r.ano, r.valor]));
+  const mediaDias = anosValidos.map(r => {
+    const aih = mapaInternacoes.get(r.ano);
+    return aih && aih > 0 ? Number(((r.valor || 0) / aih).toFixed(1)) : 0;
+  });
+
+  const data = {
+    labels,
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Dias de Permanência Totais',
+        data: dias,
+        backgroundColor: '#718096',
+        borderRadius: 4,
+        yAxisID: 'y'
+      },
+      {
+        type: 'line',
+        label: 'Média de Dias por Internação',
+        data: mediaDias,
+        borderColor: '#C05621',
+        backgroundColor: '#C05621',
+        pointRadius: 4,
+        tension: 0.3,
+        yAxisID: 'y1'
+      }
+    ]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            if (ctx.dataset.yAxisID === 'y1') {
+              return ` ${ctx.dataset.label}: ${ctx.parsed.y} dias / internação`;
+            }
+            return ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)} dias`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Ano',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Dias Totais de Internação',
+          color: '#718096',
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        beginAtZero: true,
+        max: 8,
+        title: {
+          display: true,
+          text: 'Média de Permanência (dias)',
+          color: '#C05621',
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { callback: v => `${v} d` },
+        grid: { drawOnChartArea: false }
+      }
+    }
+  };
+
+  return (
+    <div style={{ height: '320px', width: '100%' }}>
+      <Bar data={data} options={options} />
+    </div>
+  );
+}
+
+/**
+ * 21. Monitoramento de SRAG (SIVEP-Gripe)
  */
 export function SragChart({ rows = [] }) {
   const ultimos = rows.slice(-20);
@@ -813,7 +1422,26 @@ export function SragChart({ rows = [] }) {
       }
     },
     scales: {
-      y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      x: {
+        title: {
+          display: true,
+          text: 'Semana Epidemiológica / Ano',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Hospitalizações e Óbitos',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { stepSize: 1 },
+        grid: { color: AXIS_GRID_COLOR }
+      }
     }
   };
 
@@ -823,4 +1451,3 @@ export function SragChart({ rows = [] }) {
     </div>
   );
 }
-

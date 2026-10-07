@@ -16,6 +16,7 @@ import {
 } from '../components/ui';
 import { 
   SihEvolucaoChart, 
+  SihDiasChart, 
   RedeSusChart 
 } from '../components/NativeCharts';
 import { formatNumber, findIndicator } from '../utils/data-loader';
@@ -38,10 +39,15 @@ export default function HospitalarView({ data, onRouteChange }) {
 
   const internacoesRows = qInternacoes?.rows || [];
   const valoresRows = qValores?.rows || [];
+  const diasRows = qDias?.rows || [];
   const redeTiposRows = qRedeTipos?.rows || [];
   const redeSusRows = qRedeSus?.rows || [];
 
   const ultimasInternacoes = internacoesRows.length ? internacoesRows[internacoesRows.length - 1].valor : 5337;
+  const ultimosDias = diasRows.length ? diasRows[diasRows.length - 1].valor : 27907;
+  const mediaPermanencia = (ultimasInternacoes && ultimosDias) 
+    ? (ultimosDias / ultimasInternacoes).toFixed(1).replace('.', ',') + ' dias' 
+    : '5,2 dias';
 
   const tabItems = [
     { id: 'internacoes', label: 'Internações Hospitalares (SIH/SUS)', icon: Activity },
@@ -92,10 +98,10 @@ export default function HospitalarView({ data, onRouteChange }) {
 
         <KPICard 
           title="Média de Permanência Hospitalar"
-          value="4 a 6 dias"
+          value={mediaPermanencia}
           unit="dias de internação observados"
-          period="Série Recente"
-          source="SIH / SUS"
+          period="SIH / SUS"
+          source="SIH / DataSUS"
         />
       </div>
 
@@ -119,6 +125,18 @@ export default function HospitalarView({ data, onRouteChange }) {
             <SihEvolucaoChart 
               rowsInternacoes={internacoesRows} 
               rowsValores={valoresRows} 
+            />
+          </ChartCard>
+
+          <ChartCard
+            title="Dias de Permanência Hospitalar & Média por AIH (SIH/SUS)"
+            description="Volume total de dias de internação hospitalar (diárias) e média calculada de permanência no leito."
+            query={qDias}
+            queryId="sih_dias"
+          >
+            <SihDiasChart 
+              rowsDias={diasRows} 
+              rowsInternacoes={internacoesRows} 
             />
           </ChartCard>
 

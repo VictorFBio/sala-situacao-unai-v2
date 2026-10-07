@@ -17,6 +17,7 @@ import {
   ApsVisitasChart, 
   ApsOdontoChart, 
   ApsProcedimentosChart, 
+  ApsColetivasChart, 
   ApsC1Chart 
 } from '../components/NativeCharts';
 import { formatNumber, findIndicator } from '../utils/data-loader';
@@ -36,11 +37,12 @@ export default function APSView({ data, onRouteChange }) {
   const qVisitas = queries.aps_visitas;
   const qOdonto = queries.aps_odontologia;
   const qProcedimentos = queries.aps_procedimentos;
+  const qColetivas = queries.aps_coletivas;
   const qC1 = queries.aps_c1;
 
   const tabItems = [
     { id: 'atendimentos', label: 'Atendimentos & Visitas ACS', icon: Stethoscope },
-    { id: 'odonto_proc', label: 'Procedimentos & Odontologia', icon: Smile },
+    { id: 'odonto_proc', label: 'Procedimentos & Atividades Coletivas', icon: Smile },
     { id: 'mais_acesso', label: 'Programa Mais Acesso (C1)', icon: ShieldCheck }
   ];
 
@@ -122,7 +124,18 @@ export default function APSView({ data, onRouteChange }) {
       </TabPanel>
 
       {/* Aba 2: Procedimentos & Odontologia */}
-      <TabPanel id="odonto_proc" value={activeTab} baseLabel="Procedimentos e Odontologia">
+      <TabPanel id="odonto_proc" value={activeTab} baseLabel="Procedimentos e Atividades Coletivas">
+        <div className="panel-grid single" style={{ marginBottom: '20px' }}>
+          <ChartCard
+            title="Atividades Coletivas & Educação em Saúde na APS (Siaps/MS)"
+            description="Reuniões de grupo, ações comunitárias e educação em saúde conduzidas pelas equipes de Atenção Primária em Unaí."
+            query={qColetivas}
+            queryId="aps_coletivas"
+          >
+            <ApsColetivasChart rows={qColetivas?.rows || []} />
+          </ChartCard>
+        </div>
+
         <div className="panel-grid">
           <ChartCard
             title="Atendimentos Odontológicos na Atenção Primária"

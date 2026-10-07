@@ -19,6 +19,7 @@ import {
   SinascPrenatalChart, 
   CausasMorteChart, 
   SimIdadeChart, 
+  ObitosAnuaisChart, 
   DengueChart, 
   SragChart, 
   ImunizacaoChart 
@@ -31,6 +32,7 @@ export default function VigilanciaView({ data, onRouteChange }) {
 
   const qNascimentos = queries.nascimentos_anuais;
   const qPrenatal = queries.sinasc_prenatal;
+  const qObitosAnuais = queries.obitos_anuais;
   const qCausas = queries.sim_causas;
   const qIdade = queries.sim_idade;
   const qDengue = queries.arboviroses_anual;
@@ -124,6 +126,17 @@ export default function VigilanciaView({ data, onRouteChange }) {
 
       {/* Aba 2: Mortalidade & Causas */}
       <TabPanel id="mortalidade" value={activeTab} baseLabel="Mortalidade e Causas">
+        <div className="panel-grid single" style={{ marginBottom: '20px' }}>
+          <ChartCard
+            title="Evolução Histórica de Óbitos Gerais (SIM 2015–2026)"
+            description="Série cronológica de óbitos de residentes em Unaí registrados no Sistema de Informações sobre Mortalidade."
+            query={qObitosAnuais}
+            queryId="obitos_anuais"
+          >
+            <ObitosAnuaisChart rows={qObitosAnuais?.rows || []} />
+          </ChartCard>
+        </div>
+
         <div className="panel-grid">
           <ChartCard
             title="Óbitos por Grandes Capítulos da CID-10 (SIM)"

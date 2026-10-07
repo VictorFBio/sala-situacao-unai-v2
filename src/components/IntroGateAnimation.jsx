@@ -2,46 +2,46 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 export default function IntroGateAnimation({ onComplete }) {
-  // Coreografia da apresentação:
-  // 1. 'closing' (0ms - 1000ms): Tela azul, portas vêm deslizando das laterais e fecham no meio
-  // 2. 'closed' (1000ms - 1050ms): Portas encostadas no meio
-  // 3. 'logos' (1050ms - 1800ms): Surgem as duas logos (Unaí e SUS) e crescem até o tamanho normal
-  // 4. 'pulsing' (1800ms - 3000ms): As logos no tamanho normal realizam pulsação harmônica
-  // 5. 'opening' (3000ms - 3900ms): Abrem-se as portas deslizando para as laterais, revelando o site
-  // 6. 'finished' (3900ms): Animação concluída
-  const [phase, setPhase] = useState('closing');
+  // Coreografia institucional precisa:
+  // 1. 'waiting' (0ms - 200ms): Tela azul limpa, portas fora da tela (-100% / +100%)
+  // 2. 'closing' (200ms - 1400ms): Portas deslizam das laterais e encontram-se perfeitamente no centro
+  // 3. 'closed' (1400ms - 1900ms): Linha divisória eliminada, logos e faixa central surgem
+  // 4. 'pulsing' (1900ms - 3200ms): Logos no tamanho padrão realizam pulsação harmônica
+  // 5. 'opening' (3200ms - 4300ms): Portas abrem para as laterais, revelando o site no vão central
+  // 6. 'finished' (4300ms): Overlay removido
+  const [phase, setPhase] = useState('waiting');
 
   useEffect(() => {
-    // 1000ms: As portas se encontram no meio
+    // 200ms: Dispara o fechamento das portas vindo de fora da tela
+    const timerClosing = setTimeout(() => {
+      setPhase('closing');
+    }, 200);
+
+    // 1400ms: Portas se encontram no centro e unem-se sem linha divisória
     const timerClosed = setTimeout(() => {
       setPhase('closed');
-    }, 1000);
+    }, 1400);
 
-    // 1050ms: Surgem as duas logos e o título
-    const timerLogos = setTimeout(() => {
-      setPhase('logos');
-    }, 1050);
-
-    // 1800ms: Logos iniciam pulsação sincronizada
+    // 1900ms: Logos iniciam pulsação sincronizada
     const timerPulsing = setTimeout(() => {
       setPhase('pulsing');
-    }, 1800);
+    }, 1900);
 
-    // 3000ms: Abrem-se as portas revelando o site
+    // 3200ms: Abrem-se as portas revelando o site
     const timerOpening = setTimeout(() => {
       setPhase('opening');
-    }, 3000);
+    }, 3200);
 
-    // 3900ms: Finaliza e remove o overlay
+    // 4300ms: Finaliza e remove o overlay
     const timerFinished = setTimeout(() => {
       setPhase('finished');
       sessionStorage.setItem('unai_gate_intro_seen', 'true');
       if (onComplete) onComplete();
-    }, 3900);
+    }, 4300);
 
     return () => {
+      clearTimeout(timerClosing);
       clearTimeout(timerClosed);
-      clearTimeout(timerLogos);
       clearTimeout(timerPulsing);
       clearTimeout(timerOpening);
       clearTimeout(timerFinished);
@@ -56,7 +56,7 @@ export default function IntroGateAnimation({ onComplete }) {
 
   if (phase === 'finished') return null;
 
-  const showLogos = phase === 'logos' || phase === 'pulsing' || phase === 'opening';
+  const showLogos = phase === 'closed' || phase === 'pulsing' || phase === 'opening';
   const isPulsing = phase === 'pulsing';
 
   return (
