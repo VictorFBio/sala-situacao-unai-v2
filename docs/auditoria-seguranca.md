@@ -25,9 +25,21 @@ Os dados publicados em `public/data/` são agregados. Os recursos de imagem rast
 - GitHub Actions fixadas por hash de commit.
 - Permissão de leitura no build; escrita em Pages e identidade temporária somente no deploy.
 - Dependabot para npm e GitHub Actions.
+- CodeQL com consultas estendidas para JavaScript, Python e GitHub Actions.
+- Testes, auditoria de dependências e compilação em pull requests.
 - Exclusão de arquivos de ambiente, chaves privadas e dados brutos locais.
 - Política de relato privado de vulnerabilidades e revisão de agregados.
 - Verificação da propriedade do domínio na conta GitHub.
+
+## Verificação da publicação
+
+A revisão foi publicada nos commits `e52baf7` e `4051c01`. A nova varredura Gitleaks nos 13 commits disponíveis não encontrou credenciais. O workflow de publicação e a verificação de testes, auditoria e compilação concluíram com sucesso no GitHub. O CodeQL concluiu a análise das três áreas de código sem alertas abertos.
+
+O domínio `saladesituacaounai.online` está verificado no GitHub, com certificado aprovado para o domínio principal e `www`, e HTTPS obrigatório ativado. Os quatro registros A e o CNAME foram conferidos em resolvedores públicos.
+
+Foram verificados os 20 arquivos de `dist/` no site público: todos responderam com HTTP 200. O conteúdo dos JSON corresponde ao build local; somente as quebras de linha diferem entre Windows e Linux. Os endereços HTTP, `www` e `victorfbio.github.io/sala-situacao-unai-v2/` redirecionaram para `https://saladesituacaounai.online/`.
+
+As sete telas e as 13 abas dos painéis foram percorridas no navegador, incluindo a busca de estabelecimento e o fundo de satélite do mapa. Não houve erros ou avisos registrados no console nessa inspeção. A inspeção da publicação não revalida, por si só, as informações epidemiológicas nas fontes originais.
 
 ## Limitações
 

@@ -71,4 +71,4 @@ O domínio é administrado na Hostinger e o site é hospedado no GitHub Pages. C
 
 Leia a [política de segurança](SECURITY.md) antes de adicionar dados ou relatar uma vulnerabilidade. Credenciais nunca devem ser incluídas no código, nos dados públicos ou em variáveis `VITE_*`, que ficam acessíveis no navegador.
 
-O Dependabot verifica atualizações de dependências e de GitHub Actions semanalmente. As ações da publicação são fixadas por commit e recebem apenas as permissões necessárias. O [registro da auditoria inicial](docs/auditoria-seguranca.md) descreve o escopo e os resultados das verificações.
+O Dependabot verifica atualizações de dependências e de GitHub Actions semanalmente. Pull requests executam testes, compilação e auditoria de dependências. O CodeQL analisa o JavaScript, o Python e as automações do repositório. As ações da publicação são fixadas por commit e recebem apenas as permissões necessárias. O [registro da auditoria inicial](docs/auditoria-seguranca.md) descreve o escopo e os resultados das verificações.
