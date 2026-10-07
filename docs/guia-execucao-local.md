@@ -1,50 +1,28 @@
-# Guia de Execução e Visualização Local — Sala de Situação de Unaí V2
+# Executar e verificar o portal localmente
 
-Este guia explica como executar, inspecionar e testar localmente o portal da V2 no computador do desenvolvedor ou gestor.
+Use Node.js 22 ou superior e npm. Execute os comandos abaixo dentro da pasta do repositório.
 
----
-
-## 1. Requisitos
-- Node.js v18+ (instalado no ambiente: v24.15)
-- Python 3.10+ (opcional, para servir a pasta `dist` estaticamente)
-
----
-
-## 2. Opções de Execução Local
-
-### Opção A: Servidor de Desenvolvimento React + Vite (com Hot Reload)
-Ideal para fazer alterações no código e ver o resultado instantaneamente:
+## Instalação e desenvolvimento
 
 ```powershell
-cd "sala-situacao-unai-v2"
+npm ci
 npm run dev
 ```
 
-Abra no navegador o endereço indicado (geralmente `http://localhost:3000/` ou `http://localhost:5173/`).
+Abra o endereço informado pelo Vite no terminal. A configuração atual usa a porta 3000, quando disponível.
 
----
-
-### Opção B: Visualização da Produção Compilada (Pasta `dist`)
-Para inspecionar exatamente o pacote otimizado pronto para publicação:
+## Versão de produção
 
 ```powershell
-cd "sala-situacao-unai-v2"
+npm test
+npm run build
 npm run preview
 ```
-Ou com Python diretamente:
-```powershell
-python -m http.server 8080 --bind 127.0.0.1 --directory "sala-situacao-unai-v2/dist"
-```
 
-Abra `http://localhost:8080/`.
+Abra o endereço informado pelo comando de visualização. A pasta `dist/` contém os arquivos publicados, incluindo os dados de `public/data/`. O servidor de visualização é destinado à inspeção local.
 
----
+## Verificações
 
-## 3. Testes Automatizados de Integridade
+`npm test` executa os testes existentes de integridade, dados, interface e segurança. `npm audit` consulta vulnerabilidades conhecidas nas dependências. Essas verificações complementam a revisão do conteúdo e não garantem, isoladamente, a ausência de dados pessoais ou falhas.
 
-Para rodar a bateria de testes de integridade dos dados, coordenadas e segurança:
-
-```powershell
-cd "sala-situacao-unai-v2"
-npm test
-```
+A configuração da publicação está em [publicacao.md](publicacao.md), e as regras de conteúdo público estão em [SECURITY.md](../SECURITY.md).
