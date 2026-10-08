@@ -20,7 +20,7 @@ Implementar portal mínimo, infraestrutura de módulos e homologação. Preserva
 2. Testes de contratos de portal, carregamento e publicação: falhas iniciais observadas; implementação passou.
 3. Portal e compositor: implementados. 24 testes do painel e 4 do portal passaram na composição; JSON comparados byte a byte.
 4. CI, segurança, documentação e recuperação: workflows independentes e guia central implementados. Ensaio do pacote de referência publicado com sucesso na homologação (run 37788406687).
-5. Homologação e revisão: revisão independente concluída; duas correções materiais implementadas com testes de regressão. Publicação integrada e validação final em andamento.
+5. Homologação e revisão: revisão independente concluída; duas correções materiais implementadas com testes de regressão. Publicação integrada concluída (run 37789759819); PR #9 em rascunho. Testes e compilação do PR e CI do portal aprovados. CodeQL encontrou duas condições de corrida nos scripts; correção usa descritor aberto para validar e ler o mesmo arquivo, sem consulta de caminho seguida de leitura por caminho. Aguardar nova análise do commit final.
 
 ## Decisões e revisão
 
@@ -32,4 +32,4 @@ Ruling: proteção de main, 2FA e configuração administrativa do publicador fi
 
 Revisão independente: P1 saída de módulo não era submetida à política de publicação; corrigido validando cada saída e o pacote final, inclusive revisão e hash de PDF/CSV. P2 saída do portal conservava arquivos retirados; corrigido com diretório temporário e substituição após sucesso. Os dois testes novos falharam antes da correção e passaram depois.
 
-Verificação local: catálogo encontrou “imunizacao” sem acentos; link antigo `/#/aps` encaminhou ao painel no caminho correto; HTTP 503 simulado mostrou indisponibilidade e “Tentar novamente” recuperou indicadores sem alterar ausência. Compilação local exigiu execução fora do sandbox devido a bloqueio EPERM de realpath/rename; não houve redução de proteção do site.
+Verificação local: catálogo encontrou “imunizacao” sem acentos; link antigo `/#/aps` encaminhou ao painel no caminho correto; HTTP 503 simulado mostrou indisponibilidade e “Tentar novamente” recuperou indicadores sem alterar ausência. Homologação publicada conferida no navegador; portal também conferido com viewport 390 × 844, oito links no menu e sem overflow horizontal. Capturas em `expansao/qa`. Compilação local exigiu execução fora do sandbox devido a bloqueio EPERM de realpath/rename; não houve redução de proteção do site.

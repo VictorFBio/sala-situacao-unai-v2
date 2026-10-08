@@ -1,6 +1,15 @@
-import { readdir, readFile, lstat } from 'node:fs/promises';
+import { readdir, open, lstat } from 'node:fs/promises';
+import { constants } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
+
+async function readStableFile(file) {
+  const handle=await open(file,constants.O_RDONLY|(constants.O_NOFOLLOW||0));
+  try {
+    if(!(await handle.stat()).isFile()) throw new Error('A publicação exige arquivo regular');
+    return await handle.readFile();
+  } finally {await handle.close();}
+}
 
 export async function validateBuildOutput(directory,reviews=[]) {
   const approved=new Map();
@@ -20,7 +29,7 @@ export async function validateBuildOutput(directory,reviews=[]) {
       if(/\.(pdf|csv)$/i.test(relative)) {
         const review=approved.get(relative);
         if(!review) throw new Error(`Documento não autorizado na saída: ${relative}`);
-        if(createHash('sha256').update(await readFile(absolute)).digest('hex')!==review.sha256) throw new Error(`Falha de checksum na saída: ${relative}`);
+        if(createHash('sha256').update(await readStableFile(absolute)).digest('hex')!==review.sha256) throw new Error(`Falha de checksum na saída: ${relative}`);
         found.add(relative);
       } else if(!/\.(html|js|css|json|png|jpe?g|webp|svg|woff2?)$/.test(relative)) throw new Error(`Tipo proibido na saída: ${relative}`);
     }
@@ -55,7 +64,7 @@ export async function validatePublicationFiles(publicDir, manifest) {
     if (/\.(pdf|csv)$/i.test(relative)) {
       const review=approved.get(relative);
       if(!review) throw new Error(`Arquivo não autorizado: ${relative}`);
-      const hash=createHash('sha256').update(await readFile(absolute)).digest('hex');
+      const hash=createHash('sha256').update(await readStableFile(absolute)).digest('hex');
       if(hash!==review.sha256) throw new Error(`Falha de checksum: ${relative}`);
       found.add(relative);
     } else if (!/^(assets\/[a-zA-Z0-9/_.-]+\.(png|jpe?g|webp|svg)|data\/(dashboard-data|fontes|imagem-satelite|indicadores-resumo|mapa-servicos)\.json|publication-manifest\.json)$/.test(relative)) {
