@@ -4,9 +4,9 @@
 
 Atualização de autorização em 08/10/2026: o usuário solicitou a migração para Cloudflare e a reorganização do domínio. O plano ativo e os requisitos de transição estão em [CLOUDFLARE.md](CLOUDFLARE.md). As restrições de calendário descritas abaixo registram a etapa anterior; não substituem essa nova autorização. O workflow GitHub atual permanece preservado como origem de contingência.
 
-Implementação em branch de desenvolvimento e repositórios separados. Produção, domínio e DNS permanecem como antes. Não integrar este PR para ativar o portal antes da avaliação de 15/10/2026 e da aprovação de sua versão concreta. O workflow atual `deploy-pages.yml` continua publicando o painel original na raiz; ele não publica o compositor.
+Implementação em branch de desenvolvimento e repositórios separados. Pacote integrado publicado no Cloudflare Pages Free; domínio principal ativo e verificado em 08/10/2026, após delegação autorizada. DNS é administrado pela Cloudflare; registro e renovação permanecem na Hostinger. O workflow atual `deploy-pages.yml` continua preservado no GitHub para publicar o painel original na raiz; ele não publica o compositor. Estado de domínio e certificados, versões aprovadas e instruções Cloudflare estão em [CLOUDFLARE.md](CLOUDFLARE.md).
 
-Portal mínimo: início, painel, catálogo, Sobre e encaminhamento aos mapas existentes. Rede, Boletins e Análises têm estado explícito de preparação. Sua elaboração depende de conteúdo autorizado. Cloudflare e backend não fazem parte desta implementação.
+Portal mínimo: início, painel, catálogo, Sobre e encaminhamento aos mapas existentes. Rede, Boletins e Análises têm estado explícito de preparação. Sua elaboração depende de conteúdo autorizado. A hospedagem Cloudflare recebe um pacote estático único; backend não faz parte desta implementação.
 
 ## Arquitetura
 
@@ -15,11 +15,13 @@ flowchart LR
   P[Portal: repositório independente] --> M[Manifesto com commits fixados]
   I[Painel: repositório atual] --> M
   M --> C[Testar, compilar e reunir]
-  C --> H[GitHub Pages de homologação]
-  C -. aprovação futura .-> D[Pages do domínio atual]
+  C --> H[Cloudflare Pages: prévia de homologação]
+  C --> D[Cloudflare Pages: produção]
+  D --> DNS[Domínio e DNS Cloudflare; registro Hostinger]
+  C -. contingência preservada .-> G[GitHub Pages anterior]
 ```
 
-O pacote contém `/`, `/painel-de-monitoramento/`, `/mapas-de-saude/`, `/rede-de-saude/`, `/boletins/`, `/dados/`, `/analises/` e `/sobre/`. O painel preserva seus fragmentos internos `#/aps`, etc. O portal reconhece links antigos conhecidos e preserva parâmetros; fragmentos não chegam ao servidor. O base path da homologação é diferente do da produção.
+O pacote contém `/`, `/painel-de-monitoramento/`, `/mapas-de-saude/`, `/rede-de-saude/`, `/boletins/`, `/dados/`, `/analises/` e `/sobre/`. O painel preserva seus fragmentos internos `#/aps`, etc. O portal reconhece links antigos conhecidos e preserva parâmetros; fragmentos não chegam ao servidor. Cloudflare usa base `/` em homologação e produção. O ambiente GitHub Pages preservado usa base `/sala-situacao-unai-homologacao/`.
 
 ## Gerar localmente
 
@@ -34,6 +36,8 @@ node scripts/compose-site.mjs --portal=../portal --legacy=../../sala-situacao-un
 Não usar pacote gerado com mudanças locais não commitadas como versão aprovada. `build-info.json` identifica commits, não captura modificações não commitadas. O workflow usa checkouts limpos e commits completos.
 
 ## Publicar homologação
+
+Para a hospedagem Cloudflare ativa, seguir **Atualizar a publicação** em [CLOUDFLARE.md](CLOUDFLARE.md): testar `ambiente=homologacao`, depois publicar a mesma referência com `ambiente=producao`. A sequência abaixo descreve a homologação GitHub Pages preservada como alternativa.
 
 1. Atualizar o módulo em seu repositório e aprovar seu commit.
 2. Alterar a referência SHA de 40 caracteres em `modules.json` por PR.
@@ -50,17 +54,17 @@ Materiais comuns estão versionados no portal em `shared/v1`. Novos módulos pod
 
 ## Checklist de aceitação e ativação posterior
 
-- [ ] Commit e pacote anterior disponíveis em backup independente; checksums conferidos.
-- [ ] Workflow completo verde; JSON preservados; fonte, período e ausência visíveis.
-- [ ] Início, sete caminhos, recarga, fragmentos antigos, filtros, downloads e retorno ao portal testados.
+- [x] Commit e pacote anterior preservados; checksums conferidos. Cópia para outro dispositivo permanece ação do titular.
+- [x] Workflow completo verde; JSON preservados; fonte, período e ausência visíveis.
+- [x] Início, sete caminhos, recarga, fragmentos antigos, filtros e retorno ao portal testados; CSVs conferidos na homologação.
 - [ ] Desktop e celular, teclado, foco, contraste e movimento reduzido revisados.
-- [ ] Falha de JSON apresenta indisponibilidade e nova tentativa; não vira zero.
+- [x] Falha de JSON apresenta indisponibilidade e nova tentativa; não vira zero (teste local com HTTP 503).
 - [ ] Conteúdo institucional, licença proposta e documentos aprovados por responsável.
-- [ ] Recuperação ensaiada em homologação.
-- [ ] Avaliação de 15/10 encerrada e aprovação da versão para produção registrada.
-- [ ] Em PR específico, adaptar `deploy-pages.yml` para preparar pacote legado verificado, executar compositor com `--base=/ --environment=producao` e enviar `dist-ecossistema` em vez de `dist`.
-- [ ] Conferir domínio, HTTPS, mapas, downloads e versão após deploy. Sem mudança DNS.
-- [ ] Registrar data real de ativação. Manter recursos anteriores na raiz por pelo menos 14 dias; removê-los apenas numa publicação revisada.
+- [x] Recuperação ensaiada em homologação GitHub; pacote de referência publicado e versão integrada restaurada.
+- [x] Nova autorização do titular para migração Cloudflare e reorganização registrada em 08/10/2026; não há impedimento de calendário vigente.
+- [x] Workflow Cloudflare separado preparado e envio pelo GitHub verificado. Preservar `deploy-pages.yml` anterior como contingência.
+- [x] Conferir domínio, HTTPS, mapa, JSON, cabeçalhos e versão após delegação DNS.
+- [x] Ativação: 08/10/2026. Manter recursos anteriores na raiz pelo menos até 22/10/2026; removê-los apenas numa publicação revisada.
 
 ## Segurança e governança
 
@@ -78,12 +82,12 @@ Código novo do portal tem licença MIT proposta. O código anterior do painel n
 
 Backup local: `expansao/01_Backup/painel-109d7d5.bundle` (Git completo) e `publicacao-109d7d5.zip` (dist conhecido). Hashes em `checksums.json`; ZIP também disponível no release `base-109d7d5` da homologação. Copiar backup local para meio independente controlado pelo titular; a pasta no mesmo computador não protege contra perda do computador. O bundle não será publicado.
 
-Antes da ativação, manter o workflow original e o pacote anterior. Para reverter uma expansão ativada, republicar o ZIP anterior após conferir seu hash, por workflow de recuperação restrito ou PR que restaure o workflow e commit aprovados. Não apagar histórico e não usar force push. DNS permanece inalterado. O serviço pode demorar alguns minutos para implantar e renovar cache.
+Manter o workflow original e o pacote anterior. Para reverter uma publicação Cloudflare, restaurar a implantação estática anterior no projeto Pages. Para voltar à origem GitHub, seguir os registros preservados e cuidados de HTTPS descritos em [CLOUDFLARE.md](CLOUDFLARE.md). Não apagar histórico e não usar force push. Publicação, cache e eventual restauração DNS têm tempos próprios; não prometer reversão instantânea.
 
 Para restaurar Git num diretório novo, `git clone painel-109d7d5.bundle painel-restaurado`; conferir commit, `npm ci`, testes e compilação. Na homologação, o workflow **Homologar ecossistema**, opção `referencia`, publica exclusivamente o dist preservado e verificado; depois reexecutar a homologação do commit escolhido com opção `integrado`. Esse ensaio não altera produção.
 
 ## Rotina e roadmap
 
-Até 15/10: preservar produção, testar apresentação e contingência. Depois: aprovar portal mínimo; publicar sem alterar DNS; implementar catálogo e boletins com conteúdo autorizado; desenvolver Rede e Mapas independentemente, após validar serviços e territórios; só avaliar Cloudflare diante de necessidade concreta. Manutenção: 30–60 min/semana para disponibilidade e dados, mais revisão mensal de dependências e recuperação. Revisar pacote antes de 500 MiB (limite interno), capacidade do Pages e faturamento; uso gratuito não elimina trabalho de validação.
+Até 15/10: concluir e verificar transição autorizada, preservar contingência e testar apresentação. Depois: implementar catálogo e boletins com conteúdo autorizado; desenvolver Rede e Mapas independentemente, após validar serviços e territórios. Manutenção: 30–60 min/semana para disponibilidade e dados, mais revisão mensal de dependências e recuperação. Revisar pacote antes de 500 MiB (limite interno), limites Pages Free (20 mil arquivos, 25 MiB por arquivo) e faturamento; uso gratuito não elimina trabalho de validação.
 
-O workflow diário de disponibilidade da homologação realiza consultas públicas simples e falha quando HTTPS, versão ou JSON essencial não respondem. Consultar notificações de falha do GitHub; não constitui monitoramento contínuo com garantia de disponibilidade.
+O workflow diário **Verificar disponibilidade do portal e homologação** realiza consultas públicas simples à produção Cloudflare, prévia Cloudflare e homologação GitHub. Falha quando HTTPS, versão ou JSON essencial não respondem; produção exige identificação de ambiente `producao` e hospedagem Cloudflare. Consultar notificações de falha do GitHub; não constitui monitoramento contínuo com garantia de disponibilidade.
