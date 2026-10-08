@@ -69,6 +69,10 @@ Limitação da última verificação: captura automatizada do evento de download
 
 ## Reversão
 
+Pacote exato da produção `44728` salvo em `expansao/01_Backup/cloudflare-44728-producao/cloudflare-pages.zip`, baixado do run `37800320892`. SHA-256: `33ebee38583c2018b95e96e23bce75ff768f6b287a1b20c1e78a55c73657b137`. Identificação interna conferida como produção Cloudflare. Copiar para outro dispositivo controlado pelo titular; backup na mesma máquina não protege contra perda dela. O pacote não contém credenciais.
+
+Monitoramento diário integrado pela PR #2 da homologação: run `37823835749` aprovado no GitHub, consultando produção Cloudflare, prévia Cloudflare e homologação GitHub. A automação consulta somente recursos públicos e não publica conteúdo.
+
 Antes da troca: manter registros anteriores na Hostinger e o Pages GitHub ativo. Depois da troca dos nameservers, a zona Cloudflare deve conservar os registros GitHub anteriores em backup para restabelecer essa origem em caso de falha. A propagação e caches DNS impedem garantir retorno instantâneo. Não remover domínio do GitHub, excluir implementações, trocar DS ou ativar DNSSEC sem revisão da situação efetiva.
 
 ## Documentação oficial
