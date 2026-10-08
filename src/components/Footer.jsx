@@ -1,6 +1,15 @@
 import React from 'react';
 import { Play } from 'lucide-react';
 
+const contributors = [
+  { name: 'João Victor Fernandes Valente Dos Santos', role: 'Residente em Gestão da Atenção Primária à Saúde' },
+  { name: 'Kamilla Quixabeira dos Santos', role: 'Residente em Gestão da Atenção Primária à Saúde' },
+  { name: 'Maria Eduarda Leal de Carvalho Santos', role: 'Residente em Gestão da Atenção Primária à Saúde' },
+  { name: 'Roberta Vitória Azevedo do Amaral', role: 'Residente em Gestão da Vigilância em Saúde' },
+  { name: 'Sabrinna Silva Rego', role: 'Residente em Gestão da Vigilância em Saúde' },
+  { name: 'Maria Clara de Melo Mendes', role: 'Residente em Gestão da Vigilância em Saúde' }
+];
+
 export default function Footer({ onRouteChange, onReplayIntro }) {
   const portalBase = import.meta.env.VITE_PORTAL_BASE;
   return (
@@ -51,6 +60,17 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
               </li>
             </ul>
           </div>
+        </div>
+
+        <div className="footer-credits">
+          <section aria-labelledby="elaboracao-tecnica">
+            <h4 id="elaboracao-tecnica">Elaboração técnica e autoria</h4>
+            <p><strong>{contributors[0].name}</strong><br />{contributors[0].role}</p>
+          </section>
+          <section aria-labelledby="autoria-revisao">
+            <h4 id="autoria-revisao">Autores e revisores de dados</h4>
+            <ul>{contributors.map(person => <li key={person.name}><strong>{person.name}</strong> — {person.role}</li>)}</ul>
+          </section>
         </div>
 
         {/* Linha Inferior com Créditos */}
