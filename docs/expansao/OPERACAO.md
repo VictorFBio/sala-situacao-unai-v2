@@ -2,6 +2,8 @@
 
 ## Estado e limites
 
+Atualização de autorização em 08/10/2026: o usuário solicitou a migração para Cloudflare e a reorganização do domínio. O plano ativo e os requisitos de transição estão em [CLOUDFLARE.md](CLOUDFLARE.md). As restrições de calendário descritas abaixo registram a etapa anterior; não substituem essa nova autorização. O workflow GitHub atual permanece preservado como origem de contingência.
+
 Implementação em branch de desenvolvimento e repositórios separados. Produção, domínio e DNS permanecem como antes. Não integrar este PR para ativar o portal antes da avaliação de 15/10/2026 e da aprovação de sua versão concreta. O workflow atual `deploy-pages.yml` continua publicando o painel original na raiz; ele não publica o compositor.
 
 Portal mínimo: início, painel, catálogo, Sobre e encaminhamento aos mapas existentes. Rede, Boletins e Análises têm estado explícito de preparação. Sua elaboração depende de conteúdo autorizado. Cloudflare e backend não fazem parte desta implementação.

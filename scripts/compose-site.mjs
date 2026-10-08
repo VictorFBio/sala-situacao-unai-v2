@@ -134,7 +134,7 @@ export async function composeSite({ portalDir, legacyDir, basePath='/', environm
       await cp(from,path.join(stage,folder),{recursive:true});
     }
     await writeFile(path.join(stage,'.nojekyll'),'');
-    await writeFile(path.join(stage,'build-info.json'),JSON.stringify({schemaVersion:1,environment,basePath,builtAt:new Date().toISOString(),publisherRevision:panelRevision,modules:versions,dataHashes,legacy:{revision:manifest.legacy.revision,retentionDays:14,activationDate:null,note:'Recursos legados mantidos; definir data somente na ativação aprovada em produção.'}},null,2)+'\n');
+    await writeFile(path.join(stage,'build-info.json'),JSON.stringify({schemaVersion:1,environment,basePath,builtAt:new Date().toISOString(),publisherRevision:panelRevision,modules:versions,dataHashes,publicationReviews:outputReviews,legacy:{revision:manifest.legacy.revision,retentionDays:14,activationDate:null,note:'Recursos legados mantidos; definir data somente na ativação aprovada em produção.'}},null,2)+'\n');
     await validateBuildOutput(stage,outputReviews);
     const checks=await verifyStaticLinks(stage,basePath);
     const size=(await Promise.all((await walk(stage)).map(f=>stat(f.absolute)))).reduce((sum,s)=>sum+s.size,0);

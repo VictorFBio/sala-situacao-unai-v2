@@ -47,3 +47,5 @@ dist-ecossistema/
 dist-ecossistema-*/
 qa/
 .compose-*/
+.cloudflare-stage-*/
+.cloudflare-previous-*/
