@@ -9,7 +9,7 @@
     {
       "id": "portal",
       "repository": "VictorFBio/sala-situacao-unai-portal",
-      "revision": "13ffa77409cf136be5c6bbbfc674d3c69710db8e",
+      "revision": "e77667334361d7943c8356df3a233b15d1c48c08",
       "destination": "/",
       "buildCommand": ["node", "scripts/build.mjs"],
       "output": "dist"
