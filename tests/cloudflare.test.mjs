@@ -16,6 +16,9 @@ async function fixture(environment='homologacao') {
     await writeFile(path.join(source,route,'index.html'),'<html lang="pt-BR"></html>');
   }
   await writeFile(path.join(source,'404.html'),'<html lang="pt-BR">Não encontrado</html>');
+  await mkdir(path.join(source,'painel-de-monitoramento/assets'));
+  await writeFile(path.join(source,'painel-de-monitoramento/assets/vendor-abcdefgh.js'),'export const exemplo=1;');
+  await writeFile(path.join(source,'painel-de-monitoramento/assets/logo.png'),'imagem');
   await mkdir(path.join(source,'painel-de-monitoramento/data'));
   const dataHashes={};
   for(const name of names) {
@@ -34,7 +37,8 @@ test('publicação Cloudflare conserva JSON e limita cache de HTML, dados e recu
     await api.prepareCloudflare(f);
     const headers=await readFile(path.join(f.output,'_headers'),'utf8');
     assert.match(headers,/Cache-Control: no-cache/);
-    assert.match(headers,/\/painel-de-monitoramento\/assets\/\*\n  Cache-Control: public, max-age=31536000, immutable/);
+    assert.match(headers,/\/painel-de-monitoramento\/assets\/vendor-abcdefgh\.js\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable/);
+    assert.doesNotMatch(headers,/\/assets\/\*|\/assets\/logo\.png\n  [^\n]*immutable/);
     assert.match(headers,/X-Robots-Tag: noindex, nofollow/);
     const redirects=await readFile(path.join(f.output,'_redirects'),'utf8');
     assert.match(redirects,/^\/painel-de-monitoramento \/painel-de-monitoramento\/ 301$/m);

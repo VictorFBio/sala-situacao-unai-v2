@@ -39,6 +39,9 @@ export async function prepareCloudflare({source,output}) {
     if(createHash('sha256').update(bytes).digest('hex')!==info.dataHashes?.[name]) throw Error(`Dados divergentes: ${name}`);
   }
   await verifyStaticLinks(source,'/');
+  // Pages soma cabeçalhos de regras coincidentes; remover no-cache antes de
+  // aplicar immutable somente aos JS/CSS com hash gerados pelo Vite.
+  const hashedAssets=files.filter(file=>/^(?:painel-de-monitoramento\/)?assets\/[-a-zA-Z0-9_]+-[a-zA-Z0-9_-]{8,32}\.(?:js|css)$/.test(file.relative)).slice(0,99);
   const headers=`/*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
@@ -46,12 +49,7 @@ export async function prepareCloudflare({source,output}) {
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Cache-Control: no-cache
 ${info.environment==='homologacao'?'  X-Robots-Tag: noindex, nofollow\n':''}
-/painel-de-monitoramento/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
-`;
+`+hashedAssets.map(file=>`/${file.relative}\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n`).join('\n');
   const redirects='# Pastas reais; sem proxy, funções ou fallback SPA global.\n'+routes.map(route=>`/${route} /${route}/ 301`).join('\n')+'\n';
   const stage=path.join(path.dirname(output),`.cloudflare-stage-${randomUUID()}`);
   const previous=path.join(path.dirname(output),`.cloudflare-previous-${randomUUID()}`);

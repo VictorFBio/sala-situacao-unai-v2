@@ -29,6 +29,7 @@ A autorização do usuário para migrar substitui a proibição de Cloudflare da
 - Testes do preparador: três falhas esperadas antes da implementação; depois 27/27 testes do publicador passaram. Validação exige base `/`, páginas reais, cinco JSON com hashes preservados, limites Free e ausência de arquivos de Functions/Workers.
 - Decisão: gerar cabeçalhos e redirecionamentos num pacote de saída separado; não ampliar a política geral de arquivos públicos para aceitar configurações arbitrárias de servidor.
 - Decisão: secret de envio somente no job de deploy; compilação e código dos módulos executados sem token Cloudflare. Workflow inicialmente manual, com geração de pacote sem envio como padrão.
+- Revisão independente apontou sobreposição de Cache-Control e cache longo para imagens sem hash. Teste de regressão falhou antes da correção; cabeçalhos agora removem a regra global antes de definir immutable só em JS/CSS com hash. Imagens, fontes, dados e arquivos compartilhados sem hash permanecem com revalidação. Verificar também os cabeçalhos reais no destino antes de trocar o domínio.
 
 ## Reversão
 
