@@ -127,7 +127,6 @@ export default function App() {
       <Header 
         currentRoute={currentRoute} 
         onRouteChange={handleRouteChange} 
-        onReplayIntro={handleReplayIntro}
       />
 
       {/* Área Principal de Conteúdo */}

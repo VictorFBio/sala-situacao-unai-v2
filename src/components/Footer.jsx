@@ -20,9 +20,9 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
           <div className="footer-brand">
             <h3>Sala de Situação de Saúde de Unaí</h3>
             <p>
-              Iniciativa técnica desenvolvida no âmbito da Residência Multiprofissional em Saúde da Família 
-              em cooperação com a Secretaria Municipal de Saúde de Unaí - MG.
+              Iniciativa técnica das Residências Multiprofissionais em Gestão da APS e Vigilância em Saúde da Universidade de Brasília - UnB, em cooperação com a Secretaria Municipal de Saúde de Unaí - MG.
             </p>
+            <img src="./assets/unb-horizontal.jpg" alt="Universidade de Brasília - UnB" className="footer-unb" loading="lazy" />
             <p style={{ marginTop: '12px', fontSize: '0.8125rem', color: '#6C889C' }}>
               Objetivo: Fortalecer a governança em saúde, subsidiar o planejamento da gestão e democratizar o acesso da população às informações epidemiológicas e assistenciais.
             </p>

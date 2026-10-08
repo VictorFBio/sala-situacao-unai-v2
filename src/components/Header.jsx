@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Play, 
   Home, 
   Activity, 
   Building2, 
@@ -10,7 +9,7 @@ import {
   FileText 
 } from 'lucide-react';
 
-export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
+export default function Header({ currentRoute, onRouteChange }) {
   const portalBase = import.meta.env.VITE_PORTAL_BASE;
   const navItems = [
     { id: '#/', label: 'Início', icon: Home },
@@ -58,15 +57,6 @@ export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
           {/* Ações Institucionais */}
           <div className="header-actions">
             {portalBase && <a href={portalBase} className="btn-ghost">Portal da Sala de Situação</a>}
-            <button 
-              type="button"
-              className="btn-ghost"
-              onClick={onReplayIntro}
-              title="Rever animação institucional de abertura"
-            >
-              <Play size={13} aria-hidden="true" />
-              <span>Rever Abertura</span>
-            </button>
           </div>
         </div>
 
