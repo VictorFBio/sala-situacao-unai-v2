@@ -3,6 +3,7 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 import { gerarCSV } from '../src/utils/dados-modelo.js';
+import { validatePublicationFiles } from '../scripts/publication-policy.mjs';
 
 const projectRoot = path.resolve('.');
 
@@ -57,22 +58,10 @@ test('4. Validação dos ativos visuais oficiais da Prefeitura, SUS e Satélite 
   assert.ok(fs.existsSync(path.join(satDir, 'sentinel2-sede-urbana.webp')), 'Mosaico urbano Sentinel-2 deve existir');
 });
 
-test('5. Auditoria de ausência de dados brutos sensíveis ou pessoais', () => {
-  const scanDir = (dir) => {
-    if (!fs.existsSync(dir)) return;
-    const files = fs.readdirSync(dir, { withFileTypes: true });
-    for (const f of files) {
-      if (f.name === 'node_modules' || f.name === '.git') continue;
-      const full = path.join(dir, f.name);
-      if (f.isDirectory()) {
-        scanDir(full);
-      } else {
-        assert.ok(!f.name.endsWith('.pdf'), `Arquivo PDF não deve estar presente no projeto: ${full}`);
-        assert.ok(!f.name.endsWith('.xlsx'), `Arquivo XLSX não deve estar presente no projeto: ${full}`);
-      }
-    }
-  };
-  scanDir(path.join(projectRoot, 'public'));
+test('5. Publicação limitada a arquivos permitidos e documentos revisados', async () => {
+  const publicDir = path.join(projectRoot, 'public');
+  const manifest = JSON.parse(fs.readFileSync(path.join(publicDir, 'publication-manifest.json'), 'utf8'));
+  await validatePublicationFiles(publicDir, manifest);
 });
 
 test('6. Auditoria de ausência total de menções a Looker Studio', () => {

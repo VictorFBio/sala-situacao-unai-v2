@@ -2,6 +2,7 @@ import React from 'react';
 import { Play } from 'lucide-react';
 
 export default function Footer({ onRouteChange, onReplayIntro }) {
+  const portalBase = import.meta.env.VITE_PORTAL_BASE;
   return (
     <footer className="site-footer">
       <div className="container">
@@ -34,6 +35,7 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
           <div className="footer-links">
             <h4>Transparência</h4>
             <ul>
+              {portalBase && <li><a href={portalBase}>Portal da Sala de Situação</a></li>}
               <li><a href="#/fontes" onClick={(e) => { e.preventDefault(); onRouteChange('#/fontes'); }}>Fontes</a></li>
               <li><a href="https://www.prefeituraunai.mg.gov.br/" target="_blank" rel="noopener noreferrer">Portal da Prefeitura</a></li>
               <li><a href="https://datasus.saude.gov.br/" target="_blank" rel="noopener noreferrer">DataSUS Ministério da Saúde</a></li>
@@ -54,7 +56,7 @@ export default function Footer({ onRouteChange, onReplayIntro }) {
         {/* Linha Inferior com Créditos */}
         <div className="footer-bottom">
           <div>
-            <span>© {new Date().getFullYear()} Sala de Situação de Saúde · Unaí (MG). Todos os dados agregados são de domínio público.</span>
+            <span>© {new Date().getFullYear()} Sala de Situação de Saúde · Unaí (MG). Consulte as fontes e condições de uso dos dados agregados.</span>
           </div>
           <div>
             <span>Secretaria Municipal de Saúde · Prefeitura Municipal de Unaí - MG</span>

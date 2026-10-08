@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "legacy": {
+    "revision": "109d7d5bb90a7b71f4313d341620b57f39b09d37",
+    "archiveUrl": "https://github.com/VictorFBio/sala-situacao-unai-homologacao/releases/download/base-109d7d5/publicacao-109d7d5.zip",
+    "sha256": "df8ccea778dd09bf2c71eb28997b74c0fb624e4669da1a0322a69364450bab33"
+  },
+  "modules": [
+    {
+      "id": "portal",
+      "repository": "VictorFBio/sala-situacao-unai-portal",
+      "revision": "13ffa77409cf136be5c6bbbfc674d3c69710db8e",
+      "destination": "/",
+      "buildCommand": ["node", "scripts/build.mjs"],
+      "output": "dist"
+    },
+    {
+      "id": "painel",
+      "repository": "VictorFBio/sala-situacao-unai-v2",
+      "revision": "self",
+      "destination": "/painel-de-monitoramento/",
+      "buildCommand": ["node", "node_modules/vite/bin/vite.js", "build"],
+      "output": "dist"
+    }
+  ]
+}

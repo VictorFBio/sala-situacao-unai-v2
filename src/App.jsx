@@ -29,6 +29,8 @@ export default function App() {
 
   const [portalData, setPortalData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   // Efeito de escuta de mudanças de hash (botões Voltar/Avançar do navegador)
   useEffect(() => {
@@ -43,13 +45,22 @@ export default function App() {
 
   // Carregar dados oficiais validados
   useEffect(() => {
+    let active = true;
     async function initData() {
-      const data = await loadPortalData();
-      setPortalData(data);
-      setLoading(false);
+      setLoading(true);
+      setLoadError(false);
+      try {
+        const data = await loadPortalData({ force: loadAttempt > 0 });
+        if (active) setPortalData(data);
+      } catch {
+        if (active) setLoadError(true);
+      } finally {
+        if (active) setLoading(false);
+      }
     }
     initData();
-  }, []);
+    return () => { active = false; };
+  }, [loadAttempt]);
 
   const handleRouteChange = (newRoute) => {
     const target = normalizeRoute(newRoute);
@@ -64,6 +75,15 @@ export default function App() {
 
   // Renderizador da vista atual
   const renderCurrentView = () => {
+    if (loadError) {
+      return (
+        <div className="container page" id="main-content" tabIndex="-1" role="alert">
+          <h1>Dados temporariamente indisponíveis</h1>
+          <p>Não foi possível carregar os arquivos públicos do painel. Nenhum indicador foi substituído por zero.</p>
+          <button className="btn-primary" type="button" onClick={() => setLoadAttempt(attempt => attempt + 1)}>Tentar novamente</button>
+        </div>
+      );
+    }
     if (loading) {
       return (
         <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
