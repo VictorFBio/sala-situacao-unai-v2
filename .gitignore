@@ -38,3 +38,14 @@ tmp/
 *.p12
 *.pfx
 .agents/
+
+# Apenas downloads revisados podem ser incluídos pelo manifesto público.
+!public/publicacoes/**/*.pdf
+!public/downloads/**/*.csv
+.sources/
+dist-ecossistema/
+dist-ecossistema-*/
+qa/
+.compose-*/
+.cloudflare-stage-*/
+.cloudflare-previous-*/

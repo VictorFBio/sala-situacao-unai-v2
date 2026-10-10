@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  Play, 
   Home, 
   Activity, 
   Building2, 
@@ -10,7 +9,8 @@ import {
   FileText 
 } from 'lucide-react';
 
-export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
+export default function Header({ currentRoute, onRouteChange }) {
+  const portalBase = import.meta.env.VITE_PORTAL_BASE;
   const navItems = [
     { id: '#/', label: 'Início', icon: Home },
     { id: '#/aps', label: 'Atenção Primária', icon: Activity },
@@ -49,22 +49,14 @@ export default function Header({ currentRoute, onRouteChange, onReplayIntro }) {
             </div>
             
             <div className="header-brand-title">
-              <strong>Sala de Situação de Saúde</strong>
+              <strong>{portalBase ? 'Painel de Monitoramento' : 'Sala de Situação de Saúde'}</strong>
               <span>Secretaria Municipal de Saúde · Unaí - MG</span>
             </div>
           </div>
 
           {/* Ações Institucionais */}
           <div className="header-actions">
-            <button 
-              type="button"
-              className="btn-ghost"
-              onClick={onReplayIntro}
-              title="Rever animação institucional de abertura"
-            >
-              <Play size={13} aria-hidden="true" />
-              <span>Rever Abertura</span>
-            </button>
+            {portalBase && <a href={portalBase} className="btn-ghost">Portal da Sala de Situação</a>}
           </div>
         </div>
 

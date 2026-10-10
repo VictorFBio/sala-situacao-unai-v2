@@ -5,20 +5,20 @@
 
 let cachedData = null;
 
-async function fetchJson(path) {
-  const res = await fetch(path);
+async function fetchJson(path, fetcher) {
+  const res = await fetcher(path, { signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Falha ao carregar ${path} (${res.status})`);
   return res.json();
 }
 
-export async function loadPortalData() {
-  if (cachedData) return cachedData;
+export async function loadPortalData({ fetcher = globalThis.fetch, force = false } = {}) {
+  if (cachedData && !force) return cachedData;
 
   const [dashboard, fontes, resumo, imagemSatelite] = await Promise.all([
-    fetchJson('./data/dashboard-data.json'),
-    fetchJson('./data/fontes.json'),
-    fetchJson('./data/indicadores-resumo.json'),
-    fetchJson('./data/imagem-satelite.json')
+    fetchJson('./data/dashboard-data.json', fetcher),
+    fetchJson('./data/fontes.json', fetcher),
+    fetchJson('./data/indicadores-resumo.json', fetcher),
+    fetchJson('./data/imagem-satelite.json', fetcher)
   ]);
 
   cachedData = {
