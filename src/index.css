@@ -375,9 +375,9 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
 .map-search input[type="search"] { flex: 1; min-width: 200px; max-width: 360px; padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius); font: inherit; font-size: .88rem; background: var(--surface); color: var(--text); }
 .map-search [role="status"] { margin-left: auto; font-size: .8rem; color: var(--text-muted); }
 .map-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
-.map-canvas { position: relative; overflow: hidden; border: 1px solid var(--border-strong); background: #F2F5F4; }
+.map-canvas { position: relative; overflow: hidden; border: 1px solid var(--border-strong); background: #F2F5F4; overscroll-behavior: contain; }
 .map-canvas[data-fundo="satelite"] { background: #E6E9E3; }
-.map-canvas > svg { display: block; width: 100%; height: auto; min-height: 310px; max-height: 540px; touch-action: none; cursor: grab; user-select: none; color: var(--text); }
+.map-canvas > svg { display: block; width: 100%; height: auto; min-height: 310px; max-height: 540px; touch-action: none; cursor: grab; user-select: none; color: var(--text); overscroll-behavior: contain; }
 .map-canvas > svg:active { cursor: grabbing; }
 .map-sat-img { pointer-events: none; }
 .map-grid { color: var(--border); opacity: .8; }
