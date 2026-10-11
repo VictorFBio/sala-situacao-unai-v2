@@ -17,7 +17,7 @@ export function PageHeader({ eyebrow, title, children, onRouteChange, backLabel 
       </a>
       <header className="page-header">
         {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-        <h2>{title}</h2>
+        <h1>{title}</h1>
         {children && <p>{children}</p>}
       </header>
     </>

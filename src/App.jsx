@@ -1,20 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import IntroGateAnimation from './components/IntroGateAnimation';
 import HomeView from './views/HomeView';
-import APSView from './views/APSView';
-import HospitalarView from './views/HospitalarView';
-import VigilanciaView from './views/VigilanciaView';
-import GestaoView from './views/GestaoView';
-import BuscaSaudeView from './views/BuscaSaudeView';
-import FontesView from './views/FontesView';
 import { loadPortalData } from './utils/data-loader';
+
+const APSView = lazy(() => import('./views/APSView'));
+const HospitalarView = lazy(() => import('./views/HospitalarView'));
+const VigilanciaView = lazy(() => import('./views/VigilanciaView'));
+const GestaoView = lazy(() => import('./views/GestaoView'));
+const BuscaSaudeView = lazy(() => import('./views/BuscaSaudeView'));
+const FontesView = lazy(() => import('./views/FontesView'));
+const reducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+const scrollToStart = () => window.scrollTo({ top: 0, behavior: reducedMotion() ? 'auto' : 'smooth' });
+
+class ViewBoundary extends React.Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  render() {
+    return this.state.failed ? <div className="container page" role="alert"><h1>Não foi possível abrir esta seção</h1><p>Atualize a página para carregar a versão disponível do painel.</p><button className="btn-primary" type="button" onClick={() => window.location.reload()}>Atualizar página</button></div> : this.props.children;
+  }
+}
 
 export default function App() {
   // Controle da animação de abertura (verifica se já foi vista na sessão)
   const [showIntro, setShowIntro] = useState(() => {
-    return !sessionStorage.getItem('unai_gate_intro_seen');
+    if (reducedMotion()) return false;
+    try { return !sessionStorage.getItem('unai_gate_intro_seen'); }
+    catch { return false; }
   });
 
   const normalizeRoute = (hash) => {
@@ -36,7 +49,7 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       setCurrentRoute(normalizeRoute(window.location.hash));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollToStart();
     };
 
     window.addEventListener('hashchange', handleHashChange);
@@ -62,11 +75,17 @@ export default function App() {
     return () => { active = false; };
   }, [loadAttempt]);
 
+  useEffect(() => {
+    if (!loading && !showIntro) document.getElementById('main-content')?.focus({ preventScroll: true });
+  }, [currentRoute, loading, showIntro]);
+
+  const completeIntro = useCallback(() => setShowIntro(false), []);
+
   const handleRouteChange = (newRoute) => {
     const target = normalizeRoute(newRoute);
     window.location.hash = target;
     setCurrentRoute(target);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToStart();
   };
 
   const handleReplayIntro = () => {
@@ -77,7 +96,7 @@ export default function App() {
   const renderCurrentView = () => {
     if (loadError) {
       return (
-        <div className="container page" id="main-content" tabIndex="-1" role="alert">
+        <div className="container page" role="alert">
           <h1>Dados temporariamente indisponíveis</h1>
           <p>Não foi possível carregar os arquivos públicos do painel. Nenhum indicador foi substituído por zero.</p>
           <button className="btn-primary" type="button" onClick={() => setLoadAttempt(attempt => attempt + 1)}>Tentar novamente</button>
@@ -86,7 +105,7 @@ export default function App() {
     }
     if (loading) {
       return (
-        <div className="container" style={{ padding: '80px 24px', textAlign: 'center' }}>
+        <div className="container" role="status" style={{ padding: '80px 24px', textAlign: 'center' }}>
           <div className="spinner" aria-hidden="true"></div>
           <h3 style={{ color: 'var(--blue-dark)', marginBottom: '8px' }}>Carregando dados da Sala de Situação...</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Validando séries agregadas e cartografia municipal de Unaí.</p>
@@ -116,11 +135,19 @@ export default function App() {
   return (
     <div className="app-root">
       {/* Link de pular direto para o conteúdo acessível */}
-      <a href="#main-content" className="skip-link">Pular para o conteúdo principal</a>
+      <a href="#main-content" className="skip-link" onClick={event => {
+        event.preventDefault();
+        const main = document.getElementById('main-content');
+        main?.focus({ preventScroll: true });
+        if (main) {
+          const headerHeight = document.querySelector('.site-header')?.getBoundingClientRect().height || 0;
+          window.scrollTo({ top: Math.max(0, main.getBoundingClientRect().top + window.scrollY - headerHeight), behavior: 'auto' });
+        }
+      }}>Pular para o conteúdo principal</a>
 
       {/* Animação dos Dois Portões (Unaí & SUS) */}
       {showIntro && (
-        <IntroGateAnimation onComplete={() => setShowIntro(false)} />
+        <IntroGateAnimation onComplete={completeIntro} />
       )}
 
       {/* Cabeçalho Institucional Fixo */}
@@ -131,7 +158,11 @@ export default function App() {
 
       {/* Área Principal de Conteúdo */}
       <main id="main-content" tabIndex={-1}>
-        {renderCurrentView()}
+        <ViewBoundary key={currentRoute}>
+          <Suspense fallback={<div className="container page" role="status"><div className="spinner" aria-hidden="true" />Carregando a seção…</div>}>
+            {renderCurrentView()}
+          </Suspense>
+        </ViewBoundary>
       </main>
 
       {/* Rodapé Institucional */}

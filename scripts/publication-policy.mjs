@@ -67,7 +67,7 @@ export async function validatePublicationFiles(publicDir, manifest) {
       const hash=createHash('sha256').update(await readStableFile(absolute)).digest('hex');
       if(hash!==review.sha256) throw new Error(`Falha de checksum: ${relative}`);
       found.add(relative);
-    } else if (!/^(assets\/[a-zA-Z0-9/_.-]+\.(png|jpe?g|webp|svg)|data\/(dashboard-data|fontes|imagem-satelite|indicadores-resumo|mapa-servicos)\.json|publication-manifest\.json)$/.test(relative)) {
+    } else if (!/^(assets\/[a-zA-Z0-9/_.-]+\.(png|jpe?g|webp|svg)|assets\/fonts\/licenses\.json|data\/(dashboard-data|fontes|imagem-satelite|indicadores-resumo|mapa-servicos)\.json|publication-manifest\.json)$/.test(relative)) {
       throw new Error(`Arquivo não autorizado: ${relative}`);
     }
   }

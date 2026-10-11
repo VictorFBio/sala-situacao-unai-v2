@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { validatePublicationFiles, validateBuildOutput } from './publication-policy.mjs';
+import { verifyPanelBundle } from './verify-panel-bundle.mjs';
 
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const sha=value=>/^[a-f0-9]{40}$/.test(value||'');
@@ -109,6 +110,7 @@ export async function composeSite({ portalDir, legacyDir, basePath='/', environm
       if(module.id==='portal') command.push(`--panel=${root}`,`--revision=${panelRevision}`,`--base=${basePath}`,`--environment=${environment}`);
       run(process.execPath,command,source,{...process.env,VITE_PORTAL_BASE:basePath});
       const built=path.join(source,module.output);
+      if(module.id==='painel') await verifyPanelBundle(built);
       let reviews=[];
       try { reviews=JSON.parse(await readFile(path.join(source,'public/publication-manifest.json'),'utf8')).files; }
       catch(error) { if(error.code!=='ENOENT') throw error; }

@@ -41,7 +41,7 @@ export async function prepareCloudflare({source,output}) {
   await verifyStaticLinks(source,'/');
   // Pages soma cabeçalhos de regras coincidentes; remover no-cache antes de
   // aplicar immutable somente aos JS/CSS com hash gerados pelo Vite.
-  const hashedAssets=files.filter(file=>/^(?:painel-de-monitoramento\/)?assets\/[-a-zA-Z0-9_]+-[a-zA-Z0-9_-]{8,32}\.(?:js|css)$/.test(file.relative)).slice(0,99);
+  const hashedAssets=files.filter(file=>/^(?:painel-de-monitoramento\/)?assets\/[-a-zA-Z0-9_]+-[a-zA-Z0-9_-]{8,32}\.(?:js|css|woff2?)$/.test(file.relative)).slice(0,99);
   const headers=`/*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin

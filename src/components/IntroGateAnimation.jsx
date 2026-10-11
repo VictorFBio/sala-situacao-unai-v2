@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowRight } from 'lucide-react';
 
 export default function IntroGateAnimation({ onComplete }) {
@@ -10,8 +10,19 @@ export default function IntroGateAnimation({ onComplete }) {
   // 5. 'opening' (3200ms - 4300ms): Portas abrem para as laterais, revelando o site no vão central
   // 6. 'finished' (4300ms): Overlay removido
   const [phase, setPhase] = useState('waiting');
+  const skipRef = useRef(null);
+  const complete = useCallback(() => {
+    setPhase('finished');
+    try { sessionStorage.setItem('unai_gate_intro_seen', 'true'); } catch { /* A abertura não depende do armazenamento. */ }
+    onComplete?.();
+  }, [onComplete]);
 
   useEffect(() => {
+    const motion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (motion?.matches) { complete(); return; }
+    skipRef.current?.focus();
+    const onMotionChange = event => { if (event.matches) complete(); };
+    motion?.addEventListener?.('change', onMotionChange);
     // 200ms: Dispara o fechamento das portas vindo de fora da tela
     const timerClosing = setTimeout(() => {
       setPhase('closing');
@@ -34,24 +45,21 @@ export default function IntroGateAnimation({ onComplete }) {
 
     // 4300ms: Finaliza e remove o overlay
     const timerFinished = setTimeout(() => {
-      setPhase('finished');
-      sessionStorage.setItem('unai_gate_intro_seen', 'true');
-      if (onComplete) onComplete();
+      complete();
     }, 4300);
 
     return () => {
+      motion?.removeEventListener?.('change', onMotionChange);
       clearTimeout(timerClosing);
       clearTimeout(timerClosed);
       clearTimeout(timerPulsing);
       clearTimeout(timerOpening);
       clearTimeout(timerFinished);
     };
-  }, [onComplete]);
+  }, [complete]);
 
   const handleSkip = () => {
-    setPhase('finished');
-    sessionStorage.setItem('unai_gate_intro_seen', 'true');
-    if (onComplete) onComplete();
+    complete();
   };
 
   if (phase === 'finished') return null;
@@ -65,6 +73,7 @@ export default function IntroGateAnimation({ onComplete }) {
       role="dialog" 
       aria-modal="true" 
       aria-label="Apresentação institucional dos portões de Unaí e SUS"
+      onKeyDown={event => { if (event.key === 'Escape') complete(); if (event.key === 'Tab') { event.preventDefault(); skipRef.current?.focus(); } }}
     >
       {/* Portão Esquerdo (Prefeitura de Unaí) */}
       <div className="gate-door gate-door-left">
@@ -116,6 +125,7 @@ export default function IntroGateAnimation({ onComplete }) {
       <button 
         type="button"
         className="btn-skip-gate" 
+        ref={skipRef}
         onClick={handleSkip}
         title="Pular apresentação e acessar os dados imediatamente"
       >

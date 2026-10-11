@@ -1,3 +1,20 @@
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url(./assets/fonts/inter-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url(./assets/fonts/manrope-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* Sala de Situação de Saúde de Unaí — Secretaria Municipal de Saúde
    Design institucional: superfícies planas, linhas finas, cantos retos. */
 
@@ -257,7 +274,7 @@ button:disabled { cursor: default; opacity: .5; }
 }
 .page-header { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
 .eyebrow { display: block; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
-.page-header h2 { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 8px; letter-spacing: -.3px; }
+.page-header :is(h1,h2) { font-size: 1.9rem; color: var(--blue-dark); margin-bottom: 8px; letter-spacing: -.3px; }
 .page-header p { color: var(--text-muted); font-size: 1rem; max-width: 820px; }
 
 .section { margin-bottom: 36px; }
@@ -495,7 +512,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
   .header-actions .btn-ghost span { display: none; }
   .hero { padding: 32px 0 28px; }
   .hero h1 { font-size: 1.75rem; }
-  .page-header h2 { font-size: 1.5rem; }
+  .page-header :is(h1,h2) { font-size: 1.5rem; }
   .eixos-grid { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; gap: 24px; }
   .chart-card-head, .chart-card-body, .chart-card-foot { padding-left: 14px; padding-right: 14px; }

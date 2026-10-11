@@ -15,10 +15,10 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom'],
-          'vendor-charts': ['chart.js', 'react-chartjs-2'],
-          'vendor-icons': ['lucide-react']
+        manualChunks(id) {
+          if (/\/node_modules\/(?:react|react-dom|scheduler)\//.test(id) || id.includes('commonjsHelpers')) return 'vendor-react';
+          if (/\/node_modules\/(?:chart.js|react-chartjs-2)\//.test(id)) return 'vendor-charts';
+          if (id.includes('/node_modules/lucide-react/')) return 'vendor-icons';
         }
       }
     }
