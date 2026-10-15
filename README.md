@@ -55,17 +55,23 @@ docs/              Guias e documentação do projeto
 tests/             Verificações em JavaScript com Node.js
 ```
 
-## Publicação no GitHub Pages
+## Publicação
 
-O workflow em [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) instala as dependências com `npm ci`, executa os testes, compila a aplicação e publica somente `dist/` no GitHub Pages quando há atualização na branch `main`. Também é possível iniciar a publicação manualmente pela aba **Actions**.
+O domínio atual usa Cloudflare Pages, com o portal na raiz e este painel em `/painel-de-monitoramento/`. A compilação no GitHub reúne os módulos fixados em `modules.json`, verifica dados e links e publica somente o pacote estático. Homologar antes de atualizar a produção; siga [o procedimento Cloudflare](docs/expansao/CLOUDFLARE.md). Não há serviço pago adicional.
 
 **Endereço público:** <https://saladesituacaounai.online/>
 
-O repositório usa **Settings → Pages → Build and deployment → Source → GitHub Actions**. O endereço padrão do projeto redireciona para o domínio personalizado:
+O workflow anterior em [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) e o endereço GitHub Pages permanecem como histórico da publicação inicial:
 
 <https://victorfbio.github.io/sala-situacao-unai-v2/>
 
-O domínio é administrado na Hostinger e o site é hospedado no GitHub Pages. Consulte [a configuração de publicação e DNS](docs/publicacao.md) para manutenção.
+O registro do domínio permanece na Hostinger; DNS e hospedagem atuais usam Cloudflare. O [guia inicial de publicação e DNS](docs/publicacao.md) documenta a etapa anterior.
+
+## Carregamento e acessibilidade
+
+As seções detalhadas, gráficos e Busca Saúde são carregados ao abrir cada seção. A composição verifica a árvore inicial de JavaScript para impedir gráficos antecipados por dependências compartilhadas. Os pedidos simultâneos de dados compartilham a mesma operação; uma falha permite nova tentativa, preservando valores ausentes.
+
+O atalho para o conteúdo preserva a seção e compensa a altura do cabeçalho. A apresentação pode ser pulada ou cancelada com Escape e respeita movimento reduzido e armazenamento indisponível. Inter e Manrope são servidas localmente; origem, hashes e licenças OFL ficam em `public/assets/fonts/licenses.json`. Arquivos com hash têm cache imutável; HTML e dados continuam revalidados.
 
 ## Segurança e manutenção
 

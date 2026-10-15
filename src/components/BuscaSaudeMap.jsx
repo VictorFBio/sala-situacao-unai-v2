@@ -116,6 +116,7 @@ export default function BuscaSaudeMap({
   const [copiado, setCopiado] = useState(false);
 
   const svgRef = useRef(null);
+  const mapCanvasRef = useRef(null);
   const gesto = useRef({ pontos: new Map(), modo: null, suprimirClique: false });
   const uid = useId().replace(/:/g, '');
 
@@ -407,11 +408,28 @@ export default function BuscaSaudeMap({
     }
   };
 
-  const rodaMapa = (e) => {
-    e.preventDefault();
+  const rodaMapaRef = useRef();
+  rodaMapaRef.current = (e) => {
     const pixel = pontoSVG(e, svgRef.current);
     if (pixel) zoomPara(zoom * Math.exp(-e.deltaY * 0.0015), pixel);
   };
+
+  useEffect(() => {
+    const canvas = mapCanvasRef.current;
+    if (!canvas) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (rodaMapaRef.current) {
+        rodaMapaRef.current(e);
+      }
+    };
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, []);
 
   const escalaAlvo = mapa.metrosPorPixel * 110;
   const expo = 10 ** Math.floor(Math.log10(escalaAlvo));
@@ -548,7 +566,7 @@ export default function BuscaSaudeMap({
       {/* Corpo Principal: SVG Canvas + Painel Lateral */}
       <div className="map-body">
         <div>
-          <div className="map-canvas" data-fundo={fundo}>
+          <div className="map-canvas" ref={mapCanvasRef} data-fundo={fundo}>
             {/* Rótulo Superior Esquerdo de Localização */}
             <div className="map-rotulo">
               <strong>{vista === 'entorno' ? 'ENTORNO DE UNAÍ' : 'UNAÍ'}</strong>
@@ -567,7 +585,6 @@ export default function BuscaSaudeMap({
               viewBox={`0 0 ${largura} ${altura}`} 
               role="group" 
               aria-label={`Mapa de Unaí e do entorno, ${visiveis.length} locais nesta vista. Arraste para mover, use a roda ou o gesto de pinça para aproximar.`} 
-              onWheel={rodaMapa} 
               onPointerDown={iniciarGesto} 
               onPointerMove={moverGesto} 
               onPointerUp={finalizarGesto} 

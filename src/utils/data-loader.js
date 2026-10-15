@@ -4,31 +4,34 @@
  */
 
 let cachedData = null;
+let pendingData = null;
 
-async function fetchJson(path) {
-  const res = await fetch(path);
+async function fetchJson(path, fetcher) {
+  const res = await fetcher(path, { signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Falha ao carregar ${path} (${res.status})`);
   return res.json();
 }
 
-export async function loadPortalData() {
-  if (cachedData) return cachedData;
-
-  const [dashboard, fontes, resumo, imagemSatelite] = await Promise.all([
-    fetchJson('./data/dashboard-data.json'),
-    fetchJson('./data/fontes.json'),
-    fetchJson('./data/indicadores-resumo.json'),
-    fetchJson('./data/imagem-satelite.json')
-  ]);
-
-  cachedData = {
+export async function loadPortalData({ fetcher = globalThis.fetch, force = false } = {}) {
+  if (pendingData) return pendingData;
+  if (cachedData && !force) return cachedData;
+  if (force) cachedData = null;
+  pendingData = Promise.all([
+    fetchJson('./data/dashboard-data.json', fetcher),
+    fetchJson('./data/fontes.json', fetcher),
+    fetchJson('./data/indicadores-resumo.json', fetcher),
+    fetchJson('./data/imagem-satelite.json', fetcher)
+  ]).then(([dashboard, fontes, resumo, imagemSatelite]) => {
+    cachedData = {
     queries: dashboard.queries || {},
     fontes: fontes?.fontes || [],
     resumo: resumo?.indicadores || [],
     imagemSatelite,
     coletadoEm: resumo?.coletado_em || null
-  };
-  return cachedData;
+    };
+    return cachedData;
+  }).finally(() => { pendingData = null; });
+  return pendingData;
 }
 
 const nf = new Intl.NumberFormat('pt-BR');
