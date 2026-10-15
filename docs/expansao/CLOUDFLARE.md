@@ -1,10 +1,10 @@
-# Migração autorizada para Cloudflare — 08/10/2026
+# Publicação no Cloudflare Pages
 
-## Objetivo e decisão
+## Arquitetura de publicação
 
-Publicar o ecossistema em um único projeto Cloudflare Pages Free, com código e compilação no GitHub. Manter repositórios independentes, portal na raiz e painel em `/painel-de-monitoramento/`. Não usar Functions, Workers de proxy, R2, banco ou produto pago.
+O portal estático e o painel independente são reunidos em um projeto Cloudflare Pages Free. O GitHub compila as revisões fixadas e o Cloudflare recebe somente o pacote estático. O portal fica na raiz e o painel em `/painel-de-monitoramento/`. Não são usados Functions, Workers de proxy, R2, banco ou produto pago.
 
-A autorização do usuário para migrar substitui a proibição de Cloudflare da etapa anterior. Preparação e testes podem começar agora. A troca do domínio só acontece com o pacote temporário validado, zona DNS inteira conferida e reversão disponível. Acesso às contas e aceitação de termos são feitos pelo titular; credenciais não entram em código nem no chat.
+A zona DNS é administrada na Cloudflare; o registro e a renovação do domínio permanecem na Hostinger. A publicação de produção usa uma revisão completa do publicador e exige acionamento manual do workflow, com o ambiente e a opção de envio definidos explicitamente.
 
 ## Plano de execução
 
@@ -20,17 +20,15 @@ A autorização do usuário para migrar substitui a proibição de Cloudflare da
 
 ## Registro de execução
 
-- Worktree existente `expansao/painel`, branch `codex/portal-modular`, reaproveitado; checkout original segue na versão `109d7d5`.
 - Backup ZIP conhecido: SHA-256 `df8ccea778dd09bf2c71eb28997b74c0fb624e4669da1a0322a69364450bab33`.
 - DNS público inicial: `apollo.dns-parking.com`, `athena.dns-parking.com`; A `185.199.108.153`, `.109.153`, `.110.153`, `.111.153`.
-- Inicialmente não havia token Cloudflare no ambiente nem nos secrets. O titular abriu as contas e autorizou especificamente criar um token Pages e salvá-lo no GitHub.
 - Titular abriu contas Cloudflare e Hostinger no Edge. Zona Hostinger exportada para backup local: quatro A, um CNAME `www` e o TXT de verificação GitHub; nenhum MX ou CAA. Domínio válido até 07/10/2027. Zona tem TTL 300 para os seis registros; consulta recursiva ainda apresentava cache com TTL maior.
 - Testes do preparador: três falhas esperadas antes da implementação; depois 27/27 testes do publicador passaram. Validação exige base `/`, páginas reais, cinco JSON com hashes preservados, limites Free e ausência de arquivos de Functions/Workers.
 - Decisão: gerar cabeçalhos e redirecionamentos num pacote de saída separado; não ampliar a política geral de arquivos públicos para aceitar configurações arbitrárias de servidor.
 - Decisão: secret de envio somente no job de deploy; compilação e código dos módulos executados sem token Cloudflare. Workflow inicialmente manual, com geração de pacote sem envio como padrão.
 - Revisão independente apontou sobreposição de Cache-Control e cache longo para imagens sem hash. Teste de regressão falhou antes da correção; cabeçalhos agora removem a regra global antes de definir immutable só em JS/CSS com hash. Imagens, fontes, dados e arquivos compartilhados sem hash permanecem com revalidação. Verificar também os cabeçalhos reais no destino antes de trocar o domínio.
 - Projeto Direct Upload `sala-situacao-unai` criado na conta Cloudflare; plano Workers Free confirmado. Zona `saladesituacaounai.online` no plano Free ($0), delegação e ativação concluídas em 08/10/2026.
-- Token de conta `Publicação Sala de Situação`: somente Pages Write/Editar, sem DNS, restrito à conta, sem expiração. Valor salvo exclusivamente como secret `CLOUDFLARE_API_TOKEN` no repositório de homologação; não registrado em arquivos ou chat. Remover/revogar ao encerrar sua necessidade; manter acesso de edição de workflows restrito.
+- Token de conta `Publicação Sala de Situação`: somente Pages Write/Editar, sem DNS, restrito à conta, sem expiração. O valor fica exclusivamente no secret `CLOUDFLARE_API_TOKEN` do repositório de homologação e não é armazenado no código. Remover ou revogar ao encerrar sua necessidade; manter acesso de edição de workflows restrito.
 - Variáveis do GitHub: `CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_PROJECT_NAME`. Job de envio em ambiente `cloudflare-pages`, sem checkout do código dos módulos. Token nunca disponível no job de compilação.
 - Publicação automática de homologação: run `37799691442`, sucesso. Endereço `https://homologacao.sala-situacao-unai.pages.dev/`.
 - Publicação automática de produção temporária: run `37800320892`, sucesso. Endereço `https://sala-situacao-unai.pages.dev/`. Commit do publicador `44728eade18fb22a212c2debcaf9a2317be2882b`; portal fixado em `2d6b9ea137000f2873b775ae8c47bb944cc41330`.
