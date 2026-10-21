@@ -14,6 +14,7 @@ import {
 } from 'chart.js';
 import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
 import { formatNumber, formatCurrency, formatCompetencia } from '../utils/data-loader';
+import { buildWeeklySeries, filterRowsByYear } from '../utils/vigilancia-series';
 
 ChartJS.register(
   CategoryScale,
@@ -178,7 +179,7 @@ export function SinascPrenatalChart({ rows = [] }) {
       label: '7 ou mais consultas (Adequado)',
       data: anos.map(a => {
         const item = rows.find(r => r.ano === a && (r.categoria?.includes('7') || r.consultas?.includes('7')));
-        return item?.valor || 0;
+        return item?.valor ?? null;
       }),
       backgroundColor: '#0B6B55'
     },
@@ -186,7 +187,7 @@ export function SinascPrenatalChart({ rows = [] }) {
       label: '4 a 6 consultas',
       data: anos.map(a => {
         const item = rows.find(r => r.ano === a && (r.categoria?.includes('4 a 6') || r.consultas?.includes('4 a 6')));
-        return item?.valor || 0;
+        return item?.valor ?? null;
       }),
       backgroundColor: '#08588E'
     },
@@ -194,7 +195,7 @@ export function SinascPrenatalChart({ rows = [] }) {
       label: 'Menos de 4 consultas / Nenhuma',
       data: anos.map(a => {
         const item = rows.find(r => r.ano === a && (r.categoria?.includes('1 a 3') || r.categoria?.includes('Nenhuma')));
-        return item?.valor || 0;
+        return item?.valor ?? null;
       }),
       backgroundColor: '#C05621'
     }
@@ -252,10 +253,11 @@ export function SinascPrenatalChart({ rows = [] }) {
 /**
  * 4. Mortalidade por Grandes Capítulos da CID-10 (SIM) - Barras Horizontais Ordenadas
  */
-export function CausasMorteChart({ rows = [], limit = 10 }) {
+export function CausasMorteChart({ rows = [], limit = 10, year = null }) {
+  const rowsDoAno = filterRowsByYear(rows, year);
   // Agregar óbitos por categoria da CID-10
   const mapa = new Map();
-  rows.forEach(r => {
+  rowsDoAno.forEach(r => {
     const nome = (r.categoria || r.causa || 'Outras').replace(/\s+/g, ' ').trim();
     if (r.valor !== null && r.valor !== undefined) {
       mapa.set(nome, (mapa.get(nome) || 0) + Number(r.valor));
@@ -339,10 +341,11 @@ export function CausasMorteChart({ rows = [], limit = 10 }) {
 /**
  * 5. Óbitos por Faixa Etária (SIM) - Ordenação Cronológica Progressiva
  */
-export function SimIdadeChart({ rows = [] }) {
+export function SimIdadeChart({ rows = [], year = null }) {
+  const rowsDoAno = filterRowsByYear(rows, year);
   // Agregar óbitos por faixa de idade caso haja múltiplos anos
   const mapa = new Map();
-  rows.forEach(r => {
+  rowsDoAno.forEach(r => {
     const f = r.faixa || r.categoria;
     if (f && r.valor !== null && r.valor !== undefined) {
       mapa.set(f, (mapa.get(f) || 0) + Number(r.valor));
@@ -448,10 +451,10 @@ export function DengueChart({ rows = [] }) {
   // Função auxiliar para recuperar o valor por agravo e ano
   const getValor = (ano, agravoNome) => {
     const item = rows.find(r => r.ano === ano && (r.agravo || '').toLowerCase() === agravoNome);
-    if (!item) return 0;
+    if (!item) return null;
     if (item.valor !== null && item.valor !== undefined) return Number(item.valor);
     if (item.soma_observada !== null && item.soma_observada !== undefined) return Number(item.soma_observada);
-    return 0;
+    return null;
   };
 
   const valoresDengue = anosUnicos.map(ano => getValor(ano, 'dengue'));
@@ -464,7 +467,7 @@ export function DengueChart({ rows = [] }) {
     datasets = [
       {
         type: 'bar',
-        label: 'Casos Notificados de Dengue',
+        label: 'Notificações de Dengue',
         data: valoresDengue,
         backgroundColor: anosUnicos.map(ano => ano === 2024 ? '#9C4221' : '#C05621'),
         hoverBackgroundColor: '#7B341E',
@@ -477,7 +480,7 @@ export function DengueChart({ rows = [] }) {
     datasets = [
       {
         type: 'bar',
-        label: 'Casos Notificados de Chikungunya',
+        label: 'Notificações de Chikungunya',
         data: valoresChik,
         backgroundColor: '#805AD5',
         hoverBackgroundColor: '#6B46C1',
@@ -587,8 +590,8 @@ export function DengueChart({ rows = [] }) {
           text: modo === 'chikungunya' 
             ? 'Notificações de Chikungunya' 
             : modo === 'todas'
-            ? 'Casos de Dengue (Eixo Esquerdo)'
-            : 'Casos Notificados / Prováveis',
+              ? 'Notificações de Dengue (Eixo Esquerdo)'
+              : 'Notificações observadas',
           color: modo === 'todas' ? '#C05621' : AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
@@ -672,7 +675,7 @@ export function DengueChart({ rows = [] }) {
 export function DengueDatasusChart({ rows = [] }) {
   const rowsValidas = rows.filter(r => r.ano);
   const anos = rowsValidas.map(r => r.parcial ? `${r.ano}* (parcial)` : String(r.ano));
-  const casos = rowsValidas.map(r => r.valor || 0);
+  const casos = rowsValidas.map(r => r.valor ?? null);
 
   const data = {
     labels: anos,
@@ -724,6 +727,69 @@ export function DengueDatasusChart({ rows = [] }) {
   return (
     <div style={{ height: '300px', width: '100%' }}>
       <Bar data={data} options={options} />
+    </div>
+  );
+}
+
+/** Série semanal observada de arboviroses (InfoDengue / SINAN). */
+export function ArboviroseSemanalChart({ rows = [], agravo = 'dengue', ano }) {
+  const { labels, values } = buildWeeklySeries(rows, agravo, ano);
+  const nomes = { dengue: 'dengue', chikungunya: 'chikungunya', zika: 'zika' };
+
+  const data = {
+    labels,
+    datasets: [{
+      label: `Notificações semanais de ${nomes[agravo] || agravo}`,
+      data: values,
+      borderColor: '#C05621',
+      backgroundColor: 'rgba(192, 86, 33, 0.12)',
+      pointBackgroundColor: '#C05621',
+      pointRadius: 3,
+      pointHoverRadius: 6,
+      borderWidth: 2,
+      tension: 0.2,
+      spanGaps: false
+    }]
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'top' },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => ` ${formatNumber(ctx.parsed.y)} notificações`
+        }
+      }
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Semana Epidemiológica',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        grid: { color: AXIS_GRID_COLOR }
+      },
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: 'Notificações observadas',
+          color: AXIS_LABEL_COLOR,
+          font: { weight: '600', size: 12 }
+        },
+        ticks: { precision: 0, maxTicksLimit: 8, callback: v => formatNumber(v) },
+        grid: { color: AXIS_GRID_COLOR }
+      }
+    }
+  };
+
+  return (
+    <div style={{ height: '320px', width: '100%' }}>
+      <Line data={data} options={options} />
     </div>
   );
 }
@@ -1926,16 +1992,16 @@ export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
 export function SragChart({ rows = [] }) {
   const ultimos = rows.slice(-20);
   const labels = ultimos.map(r => `Sem ${r.semana}/${String(r.ano).slice(-2)}`);
-  const hospitalizacoes = ultimos.map(r => r.valor || 0);
-  const obitos = ultimos.map(r => r.obitos || 0);
+  const notificacoes = ultimos.map(r => r.valor ?? null);
+  const obitos = ultimos.map(r => r.obitos ?? null);
 
   const data = {
     labels,
     datasets: [
       {
         type: 'bar',
-        label: 'Hospitalizações por SRAG',
-        data: hospitalizacoes,
+        label: 'Notificações de SRAG',
+        data: notificacoes,
         backgroundColor: 'rgba(214, 158, 46, 0.8)',
         borderRadius: 4
       },
@@ -1976,7 +2042,7 @@ export function SragChart({ rows = [] }) {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Hospitalizações e Óbitos',
+          text: 'Notificações e óbitos registrados',
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
