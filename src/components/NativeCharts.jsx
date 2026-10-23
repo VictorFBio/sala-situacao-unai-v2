@@ -15,6 +15,13 @@ import {
 import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
 import { formatNumber, formatCurrency, formatCompetencia } from '../utils/data-loader';
 import { buildWeeklySeries, filterRowsByYear } from '../utils/vigilancia-series';
+import {
+  classifyCoverage,
+  COVERAGE_BANDS,
+  getVaccineTarget,
+  resolveCoverage,
+  VACCINE_TARGETS
+} from '../utils/imunizacao-series';
 
 ChartJS.register(
   CategoryScale,
@@ -1467,7 +1474,7 @@ export function InternacoesEspecialidadeChart({ rows = [] }) {
  */
 export function ImunizacaoChart({ rows = [] }) {
   const labels = rows.map(r => r.vacina || r.imunobiologico || r.categoria || '');
-  const valores = rows.map(r => r.cobertura || r.valor || 0);
+  const valores = rows.map(resolveCoverage);
 
   const data = {
     labels,
@@ -1475,7 +1482,7 @@ export function ImunizacaoChart({ rows = [] }) {
       {
         label: 'Cobertura Vacinal (%)',
         data: valores,
-        backgroundColor: valores.map(v => v >= 95 ? '#0B6B55' : v >= 80 ? '#D69E2E' : '#C05621'),
+        backgroundColor: valores.map(value => classifyCoverage(value)?.color ?? 'transparent'),
         borderRadius: 4
       }
     ]
@@ -1490,9 +1497,11 @@ export function ImunizacaoChart({ rows = [] }) {
       tooltip: {
         callbacks: {
           label: (ctx) => {
-            const val = ctx.parsed.x || 0;
-            const formatted = typeof val === 'number' ? val.toFixed(1).replace('.', ',') : val;
-            return ` Cobertura: ${formatted}% (Meta PNI: 95%)`;
+            const value = valores[ctx.dataIndex];
+            if (value === null) return ' Cobertura: indisponível';
+            const formatted = value.toFixed(1).replace('.', ',');
+            const target = getVaccineTarget(labels[ctx.dataIndex]);
+            return ` Cobertura: ${formatted}%${target === null ? '' : ` | Meta da vacina: ${target}%`}`;
           }
         }
       }
@@ -1503,7 +1512,7 @@ export function ImunizacaoChart({ rows = [] }) {
         beginAtZero: true,
         title: {
           display: true,
-          text: 'Cobertura Vacinal (%) — Meta PNI: 95%',
+          text: 'Cobertura Vacinal (%)',
           color: AXIS_LABEL_COLOR,
           font: { weight: '600', size: 12 }
         },
@@ -1523,8 +1532,35 @@ export function ImunizacaoChart({ rows = [] }) {
   };
 
   return (
-    <div style={{ height: '340px', width: '100%' }}>
-      <Bar data={data} options={options} />
+    <div style={{ width: '100%' }}>
+      <div style={{ height: '340px', width: '100%' }}>
+        <Bar data={data} options={options} />
+      </div>
+      <div aria-label="Faixas visuais usadas pelo painel" style={{ marginTop: '12px' }}>
+        <strong>Faixas visuais usadas pelo painel</strong>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: '6px' }}>
+          {COVERAGE_BANDS.map(band => (
+            <span key={band.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span aria-hidden="true" style={{ width: '12px', height: '12px', borderRadius: '2px', background: band.color }} />
+              {band.label}
+            </span>
+          ))}
+        </div>
+        <p style={{ margin: '8px 0 0' }}>
+          As cores são faixas visuais do painel, não uma classificação oficial do PNI nem indicação de meta atingida.
+        </p>
+      </div>
+      <div aria-label="Metas de referência por vacina" style={{ marginTop: '12px' }}>
+        <strong>Metas de referência por vacina</strong>
+        <p style={{ margin: '6px 0' }}>
+          BCG e rotavírus: 90%. Demais vacinas infantis mapeadas abaixo: 95%. Fonte da referência: <a href="https://www.saude.mg.gov.br/vacinamaisminas/" target="_blank" rel="noreferrer">SES-MG — Vacina Mais Minas</a>.
+        </p>
+        <ul style={{ columns: '220px', margin: 0, paddingLeft: '20px' }}>
+          {Object.entries(VACCINE_TARGETS).map(([label, target]) => (
+            <li key={label}>{label}: {target}%</li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
@@ -1989,11 +2025,15 @@ export function SihDiasChart({ rowsDias = [], rowsInternacoes = [] }) {
 /**
  * 21. Monitoramento de SRAG (SIVEP-Gripe)
  */
-export function SragChart({ rows = [] }) {
-  const ultimos = rows.slice(-20);
-  const labels = ultimos.map(r => `Sem ${r.semana}/${String(r.ano).slice(-2)}`);
-  const notificacoes = ultimos.map(r => r.valor ?? null);
-  const obitos = ultimos.map(r => r.obitos ?? null);
+export function SragChart({ series }) {
+  if (series?.error) {
+    return <p className="note" role="alert">Não foi possível apresentar a série: {series.error}</p>;
+  }
+  if (!series || series.empty || !series.labels.length) {
+    return <p className="note">Não há valores observados de SRAG para o ano selecionado.</p>;
+  }
+
+  const { labels, notificacoes, obitos } = series;
 
   const data = {
     labels,
@@ -2003,16 +2043,21 @@ export function SragChart({ rows = [] }) {
         label: 'Notificações de SRAG',
         data: notificacoes,
         backgroundColor: 'rgba(214, 158, 46, 0.8)',
-        borderRadius: 4
+        borderRadius: 4,
+        order: 1
       },
       {
         type: 'line',
         label: 'Óbitos por SRAG',
         data: obitos,
-        borderColor: '#E53E3E',
-        backgroundColor: '#E53E3E',
-        tension: 0.2,
-        pointRadius: 4
+        borderColor: '#8B1E1E',
+        backgroundColor: '#8B1E1E',
+        borderWidth: 3,
+        tension: 0,
+        spanGaps: false,
+        pointRadius: 4,
+        pointBackgroundColor: '#8B1E1E',
+        order: 0
       }
     ]
   };
@@ -2024,7 +2069,14 @@ export function SragChart({ rows = [] }) {
       legend: { position: 'top' },
       tooltip: {
         callbacks: {
-          label: (ctx) => ` ${ctx.dataset.label}: ${formatNumber(ctx.parsed.y)}`
+          label: (ctx) => {
+            const label = ctx.dataset.type === 'line'
+              ? 'Óbitos por SRAG entre casos da semana de início de sintomas'
+              : ctx.dataset.label;
+            return ctx.parsed.y === null
+              ? ` ${label}: indisponível`
+              : ` ${label}: ${formatNumber(ctx.parsed.y)}`;
+          }
         }
       }
     },
@@ -2048,6 +2100,7 @@ export function SragChart({ rows = [] }) {
         },
         ticks: { 
           stepSize: 1,
+          precision: 0,
           callback: v => formatNumber(v)
         },
         grid: { color: AXIS_GRID_COLOR }

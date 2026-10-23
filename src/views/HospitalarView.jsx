@@ -20,6 +20,7 @@ import {
   RedeSusChart 
 } from '../components/NativeCharts';
 import { formatNumber, findIndicator } from '../utils/data-loader';
+import { buildHospitalarSnapshot } from '../utils/hospitalar-series';
 
 export default function HospitalarView({ data, onRouteChange }) {
   const [activeTab, setActiveTab] = useState('internacoes');
@@ -43,11 +44,13 @@ export default function HospitalarView({ data, onRouteChange }) {
   const redeTiposRows = qRedeTipos?.rows || [];
   const redeSusRows = qRedeSus?.rows || [];
 
-  const ultimasInternacoes = internacoesRows.length ? internacoesRows[internacoesRows.length - 1].valor : 5337;
-  const ultimosDias = diasRows.length ? diasRows[diasRows.length - 1].valor : 27907;
-  const mediaPermanencia = (ultimasInternacoes && ultimosDias) 
-    ? (ultimosDias / ultimasInternacoes).toFixed(1).replace('.', ',') + ' dias' 
-    : '5,2 dias';
+  const hospitalarSnapshot = buildHospitalarSnapshot(internacoesRows, diasRows);
+  const internacoesKpi = hospitalarSnapshot.internacoes === null
+    ? 'Indisponível'
+    : formatNumber(hospitalarSnapshot.internacoes);
+  const mediaPermanencia = hospitalarSnapshot.mediaPermanencia === null
+    ? 'Indisponível'
+    : `${hospitalarSnapshot.mediaPermanencia.toFixed(1).replace('.', ',')} dias`;
 
   const tabItems = [
     { id: 'internacoes', label: 'Internações Hospitalares (SIH/SUS)', icon: Activity },
@@ -90,18 +93,18 @@ export default function HospitalarView({ data, onRouteChange }) {
 
         <KPICard 
           title="Internações Hospitalares Aprovadas"
-          value={ultimasInternacoes ? formatNumber(ultimasInternacoes) : "5.337"}
-          unit="Autorizações de Internação (AIH/ano)"
-          period="SIH / SUS"
-          source="SIH / DataSUS"
+          value={internacoesKpi}
+          unit="AIH aprovadas no período"
+          period={hospitalarSnapshot.periodo}
+          source="SIH/SUS — DATASUS"
         />
 
         <KPICard 
           title="Média de Permanência Hospitalar"
           value={mediaPermanencia}
-          unit="dias de internação observados"
-          period="SIH / SUS"
-          source="SIH / DataSUS"
+          unit="dias por AIH no período"
+          period={hospitalarSnapshot.periodo}
+          source="SIH/SUS — DATASUS"
         />
       </div>
 
@@ -142,8 +145,9 @@ export default function HospitalarView({ data, onRouteChange }) {
 
           <Note title="Aspectos da Produção Hospitalar em Unaí">
             <p>
-              As internações pelo SUS no município de Unaí englobam o atendimento prestado a munícipes e a pacientes referenciados de municípios vizinhos da Macrorregião Noroeste de Minas. O monitoramento contínuo das AIHs permite dimensionar leitos clínicos, cirúrgicos e obstétricos.
+              As AIH são agregadas pela residência informada do paciente em Unaí e pelo ano/competência de processamento ou faturamento. Não representam todas as internações ocorridas nos hospitais do município nem uma medida de ocupação de leitos.
             </p>
+            {hospitalarSnapshot.note && <p>{hospitalarSnapshot.note}</p>}
           </Note>
         </div>
       </TabPanel>

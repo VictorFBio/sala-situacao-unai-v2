@@ -28,6 +28,7 @@ import {
   ImunizacaoChart 
 } from '../components/NativeCharts';
 import { buildWeeklySeries, buildWeeklySeriesNote, filterRowsByYear, getYearOptions } from '../utils/vigilancia-series';
+import { buildSragSeries, buildSragSeriesNote, getSragYearOptions } from '../utils/srag-series';
 
 export default function VigilanciaView({ data, onRouteChange }) {
   const [activeTab, setActiveTab] = useState('nascimentos');
@@ -35,6 +36,7 @@ export default function VigilanciaView({ data, onRouteChange }) {
   const [anoIdadeSelecionado, setAnoIdadeSelecionado] = useState(null);
   const [agravoSemanalSelecionado, setAgravoSemanalSelecionado] = useState('dengue');
   const [anoSemanalSelecionado, setAnoSemanalSelecionado] = useState(null);
+  const [anoSragSelecionado, setAnoSragSelecionado] = useState(null);
 
   const queries = data?.queries || {};
 
@@ -71,6 +73,12 @@ export default function VigilanciaView({ data, onRouteChange }) {
     chikungunya: 'Chikungunya',
     zika: 'Zika'
   }[agravoSemanalSelecionado];
+
+  const anosSrag = getSragYearOptions(qSrag?.rows || []);
+  const anoSrag = anosSrag.some(item => item.ano === anoSragSelecionado)
+    ? anoSragSelecionado
+    : anosSrag.at(-1)?.ano ?? null;
+  const serieSrag = buildSragSeries(qSrag?.rows || [], anoSrag);
 
   const tabItems = [
     { id: 'nascimentos', label: 'Nascidos Vivos & Pré-Natal (SINASC)', icon: Baby },
@@ -267,11 +275,16 @@ export default function VigilanciaView({ data, onRouteChange }) {
         <div className="panel-grid single">
           <ChartCard
             title="Notificações semanais de SRAG (SIVEP-Gripe)"
-            description="Notificações de SRAG e óbitos registrados no conjunto municipal, por semana epidemiológica."
+            description="Notificações de SRAG e óbitos por SRAG entre casos da semana de início de sintomas (DT_SIN_PRI)."
             query={qSrag}
+            rows={serieSrag.tableRows}
             queryId="srag_sivep"
+            controls={anosSrag.length > 0 ? (
+              <YearSelect years={anosSrag} value={anoSrag ?? ''} onChange={setAnoSragSelecionado} />
+            ) : null}
+            note={buildSragSeriesNote(serieSrag, qSrag?.source?.period)}
           >
-            <SragChart rows={qSrag?.rows || []} />
+            <SragChart series={serieSrag} />
           </ChartCard>
         </div>
       </TabPanel>
@@ -298,6 +311,7 @@ export default function VigilanciaView({ data, onRouteChange }) {
             <li>Na curva semanal InfoDengue, a linha termina na última semana com valor; a tabela e o CSV mantêm as demais linhas da fonte.</li>
             <li>Notificações InfoDengue/SINAN e casos prováveis DATASUS/TabNet são séries distintas e não devem ser somadas como uma única contagem.</li>
             <li>SRAG é apresentada como notificações do SIVEP-Gripe; esses registros não representam, por si só, uma contagem de internações hospitalares.</li>
+            <li>Os óbitos por SRAG são contados entre os casos agrupados pela semana de início de sintomas (DT_SIN_PRI), não pela data do óbito nem como acumulado.</li>
           </ul>
         </Note>
       </div>
